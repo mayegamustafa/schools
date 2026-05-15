@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model School {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  ownerUserId      String?
+  owner            User?    @relation("SchoolOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  type             String
+  category         String
+  gender           String   @default("mixed")
+  description      String
+  shortDescription String
+  logo             String   @default("")
+  coverImage       String   @default("")
+  gallery          String   @default("[]")
+  videos           String   @default("[]")
+  address          String
+  city             String
+  region           String
+  country          String   @default("Uganda")
+  latitude         Float    @default(0)
+  longitude        Float    @default(0)
+  phone            String
+  email            String
+  website          String?
+  whatsapp         String?
+  currency         String   @default("UGX")
+  dayMin           Int
+  dayMax           Int
+  boardingMin      Int?
+  boardingMax      Int?
+  facilities       String   @default("[]")
+  rating           Float    @default(0)
+  reviewCount      Int      @default(0)
+  isVerified       Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
+  isPremium        Boolean  @default(false)
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  reviews          Review[]
+  leads            Lead[]
+  payments         Payment[]
+  subscription     SchoolSubscription?
+  conversations    Conversation[]
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId     String
+  userName   String
+  userAvatar String?
+  rating     Int
+  title      String
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  avatar    String?
+  favorites String   @default("[]")
+  createdAt DateTime @default(now())
+  notifications Notification[]
+  schools   School[] @relation("SchoolOwner")
+  conversations Conversation[] @relation("ConversationUser")
+  messages  Message[]
+}
+
+model Conversation {
+  id             String    @id @default(cuid())
+  schoolId       String
+  school         School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation("ConversationUser", fields: [userId], references: [id], onDelete: Cascade)
+  subject        String
+  status         String    @default("open")
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  messages       Message[]
+
+  @@index([schoolId, lastMessageAt])
+  @@index([userId, lastMessageAt])
+  @@index([status])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole      String
+  content         String
+  isRead          Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model SubscriptionPlan {
+  id            String             @id
+  name          String
+  price         Int
+  currency      String             @default("UGX")
+  period        String
+  features      String             @default("[]")
+  isFeatured    Boolean            @default(false)
+  isActive      Boolean            @default(true)
+  sortOrder     Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  subscriptions SchoolSubscription[]
+}
+
+model SchoolSubscription {
+  id         String           @id @default(cuid())
+  schoolId   String           @unique
+  planId     String
+  status     String           @default("active")
+  periodStart DateTime        @default(now())
+  periodEnd  DateTime?
+  autoRenew  Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  school     School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments   Payment[]
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actorName String
+  action    String
+  resource  String
+  resourceId String?
+  details   String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([resource])
+}
+
+model SupportTicket {
+  id            String   @id @default(cuid())
+  submitterName String
+  submitterEmail String
+  subject       String
+  message       String
+  status        String   @default("open")
+  priority      String   @default("normal")
+  adminNote     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, priority])
+}
+
+model CmsSection {
+  id        String   @id
+  title     String
+  content   String   @default("{}")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id             String              @id @default(cuid())
+  schoolId       String
+  school         School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   SchoolSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  amount         Int
+  currency       String              @default("UGX")
+  status         String              @default("paid")
+  method         String?
+  reference      String?
+  paidAt         DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+
+  @@index([schoolId, status])
+  @@index([subscriptionId])
+}

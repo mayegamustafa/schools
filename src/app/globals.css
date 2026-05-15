@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2d3640;
+  --color-primary-light: #4a5562;
+  --color-primary-dark: #1f252c;
+  --color-secondary: #667380;
+  --color-accent: #8b7355;
+  --color-accent-light: #a38f75;
+  --color-accent-dark: #69553e;
+  --color-success: #446c56;
+  --color-success-light: #5d8570;
+  --color-error: #904545;
+  --color-warning: #8e6f4c;
+
+  --color-background: #f4f3ef;
+  --color-surface: #ffffff;
+  --color-card: #fcfbf8;
+  --color-text-primary: #20262d;
+  --color-text-secondary: #505b66;
+  --color-text-muted: #6e7881;
+  --color-border: #d7d3cb;
+  --color-hover: #ede9e1;
+
+  --font-sans: "Public Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Newsreader", Georgia, serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(18, 24, 29, 0.05);
+  --shadow-md: 0 4px 10px rgba(18, 24, 29, 0.08);
+  --shadow-lg: 0 8px 24px rgba(18, 24, 29, 0.11);
+  --shadow-xl: 0 16px 36px rgba(18, 24, 29, 0.15);
+  --shadow-glow: 0 0 0 3px rgba(45, 54, 64, 0.15);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out forwards;
+}
+
+.stagger-children > * {
+  opacity: 0;
+  animation: slide-up 0.35s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
+.skeleton {
+  background: linear-gradient(90deg, #ddd9d2 25%, #f1eee7 50%, #ddd9d2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c4beb2;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9f9889;
+}
+
+*:focus-visible {
+  outline: 2px solid #56616d;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+}
+
+.glass-white {
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid var(--color-border);
+}
+
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.img-zoom {
+  overflow: hidden;
+}
+.img-zoom img {
+  transition: transform 0.35s ease;
+}
+.img-zoom:hover img {
+  transform: scale(1.03);
+}
+
+.btn-press:active {
+  transform: scale(0.985);
+}
+
+.input-premium {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-premium:focus {
+  box-shadow: var(--shadow-glow);
+  border-color: #55606b;
+}
+
+.navbar-transparent {
+  background: rgba(244, 243, 239, 0.94);
+  border-bottom: 1px solid var(--color-border);
+}
+.navbar-solid {
+  background: rgba(244, 243, 239, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(18, 24, 29, 0.06);
+}
+
+.navbar-shell {
+  background: rgba(244, 243, 239, 0.96);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+::selection {
+  background: rgba(139, 115, 85, 0.22);
+  color: var(--color-text-primary);
+}
