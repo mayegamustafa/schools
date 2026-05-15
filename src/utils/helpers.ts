@@ -26,6 +26,8 @@ export function getSchoolTypeLabel(type: string): string {
     kindergarten: 'Kindergarten',
     primary: 'Primary School',
     secondary: 'Secondary School',
+    secondary_o: 'Secondary (O Level)',
+    secondary_oa: 'Secondary (O & A Level)',
     university: 'University',
     daycare: 'Daycare',
   };

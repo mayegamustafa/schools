@@ -34,7 +34,8 @@ export default function RegisterSchoolPage() {
   const [loading, setLoading] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
   const [form, setForm] = useState({
-    name: '', type: '', category: '', gender: 'mixed', description: '',
+    name: '', types: [] as string[], secondaryLevel: 'oa' as 'o' | 'oa',
+    category: '', gender: 'mixed', description: '',
     phone: '', email: '', website: '', whatsapp: '',
     address: '', city: '', region: '', country: 'Uganda',
     latitude: '', longitude: '',
@@ -49,6 +50,15 @@ export default function RegisterSchoolPage() {
 
   const update = (field: string, value: string | string[]) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const toggleType = (t: string) => {
+    setForm(prev => ({
+      ...prev,
+      types: prev.types.includes(t)
+        ? prev.types.filter(x => x !== t)
+        : [...prev.types, t],
+    }));
   };
 
   const toggleFacility = (f: string) => {
@@ -117,7 +127,9 @@ export default function RegisterSchoolPage() {
         },
         body: JSON.stringify({
           name: form.name,
-          type: form.type,
+          type: form.types
+            .map(t => t === 'secondary' ? `secondary_${form.secondaryLevel}` : t)
+            .join(','),
           category: form.category,
           gender: form.gender,
           description: form.description,
@@ -184,15 +196,49 @@ export default function RegisterSchoolPage() {
                 placeholder="e.g. Kampala Junior Academy"
                 className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">School Type *</label>
-                <select required value={form.type} onChange={e => update('type', e.target.value)}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                  <option value="">{schoolTypes.length ? 'Select type' : 'No type options available'}</option>
-                  {schoolTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                School Type * <span className="text-xs font-normal text-text-muted">(select all that apply)</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {schoolTypes.map(t => (
+                  <label key={t.value} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
+                    form.types.includes(t.value)
+                      ? 'bg-primary/5 border-primary/30 text-primary'
+                      : 'border-border text-text-secondary hover:bg-gray-50'
+                  }`}>
+                    <input type="checkbox" checked={form.types.includes(t.value)} onChange={() => toggleType(t.value)} className="sr-only" />
+                    <span className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center text-xs font-bold transition-colors ${
+                      form.types.includes(t.value) ? 'bg-primary border-primary text-white' : 'border-border'
+                    }`}>
+                      {form.types.includes(t.value) && '\u2713'}
+                    </span>
+                    <span className="text-sm">{t.label}</span>
+                  </label>
+                ))}
+                {schoolTypes.length === 0 && (
+                  <p className="text-sm text-text-secondary col-span-full">No type options available yet.</p>
+                )}
               </div>
+              {form.types.includes('secondary') && (
+                <div className="mt-3 pl-4 border-l-2 border-primary/30">
+                  <p className="text-xs font-medium text-text-secondary mb-2">Secondary level offered</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(['o', 'oa'] as const).map(level => (
+                      <label key={level} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                        form.secondaryLevel === level ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-gray-50'
+                      }`}>
+                        <input type="radio" name="secondaryLevel" value={level}
+                          checked={form.secondaryLevel === level}
+                          onChange={() => update('secondaryLevel', level)} className="sr-only" />
+                        {level === 'o' ? 'O Level only' : 'O & A Level'}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Category *</label>
                 <select required value={form.category} onChange={e => update('category', e.target.value)}
@@ -216,7 +262,11 @@ export default function RegisterSchoolPage() {
                 rows={4} placeholder="Tell parents about your school..."
                 className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none" />
             </div>
-            <button type="button" onClick={() => setStep(2)}
+            <button type="button" onClick={() => {
+                if (form.types.length === 0) { showToast('Please select at least one school type', 'error'); return; }
+                if (!form.category) { showToast('Please select a category', 'error'); return; }
+                setStep(2);
+              }}
               className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
               Continue
             </button>
