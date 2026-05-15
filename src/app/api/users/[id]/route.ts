@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { hashSync } from 'bcryptjs';
+
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export async function PATCH(
   request: Request,
@@ -24,6 +27,15 @@ export async function PATCH(
     data.role = body.role;
   }
   if (body.name) data.name = String(body.name).slice(0, 100);
+  if (body.password) {
+    if (!PASSWORD_RULE.test(String(body.password))) {
+      return NextResponse.json(
+        { error: 'Password must be 8+ chars with uppercase, lowercase, and a number' },
+        { status: 400 }
+      );
+    }
+    data.password = hashSync(String(body.password), 10);
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: 'No valid fields provided' }, { status: 400 });

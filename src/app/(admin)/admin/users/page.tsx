@@ -32,6 +32,9 @@ export default function AdminUsersPage() {
   const { token, user, showToast } = useApp();
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<UserRole | 'all'>('all');
+  const [pwModal, setPwModal] = useState<{ userId: string; name: string } | null>(null);
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
 
   const endpoint = `/api/users?q=${encodeURIComponent(query)}&role=${role}&limit=100`;
   const { data, error, isLoading, mutate } = useSWR(
@@ -60,6 +63,34 @@ export default function AdminUsersPage() {
       await mutate();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Unable to update role', 'error');
+    }
+  };
+
+  const setPassword = async () => {
+    if (!token || !pwModal) return;
+    const pwRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!pwRule.test(newPw)) {
+      showToast('Password must be 8+ chars with uppercase, lowercase, and a number', 'error');
+      return;
+    }
+    if (newPw !== confirmPw) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/${pwModal.userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: newPw }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || 'Failed to set password');
+      showToast(`Password updated for ${pwModal.name}`, 'success');
+      setPwModal(null);
+      setNewPw('');
+      setConfirmPw('');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to set password', 'error');
     }
   };
 
@@ -101,6 +132,7 @@ export default function AdminUsersPage() {
   if (error || !data) return <p className="text-error">{error instanceof Error ? error.message : 'Unable to load users'}</p>;
 
   return (
+    <>
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -173,13 +205,22 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-4 text-sm text-text-secondary">{new Date(account.createdAt).toLocaleString()}</td>
                     <td className="px-4 py-4">
-                      <button
-                        onClick={() => deleteUser(account.id, account.name)}
-                        disabled={isCurrentUser}
-                        className="text-sm text-error hover:underline disabled:text-text-muted disabled:no-underline"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => { setPwModal({ userId: account.id, name: account.name }); setNewPw(''); setConfirmPw(''); }}
+                          disabled={isCurrentUser}
+                          className="text-sm text-primary hover:underline disabled:text-text-muted disabled:no-underline"
+                        >
+                          Set Password
+                        </button>
+                        <button
+                          onClick={() => deleteUser(account.id, account.name)}
+                          disabled={isCurrentUser}
+                          className="text-sm text-error hover:underline disabled:text-text-muted disabled:no-underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -189,5 +230,37 @@ export default function AdminUsersPage() {
         </div>
       </div>
     </div>
+
+      {pwModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-text-primary">Set password for <span className="text-primary">{pwModal.name}</span></h2>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">New Password</label>
+              <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
+                placeholder="Min 8 chars"
+                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">Confirm Password</label>
+              <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
+                placeholder="Repeat password"
+                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+            </div>
+            <p className="text-xs text-text-muted">Must be 8+ characters with uppercase, lowercase, and a number.</p>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => { setPwModal(null); setNewPw(''); setConfirmPw(''); }}
+                className="flex-1 py-2.5 border border-border text-text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={setPassword}
+                className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
+                Save Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

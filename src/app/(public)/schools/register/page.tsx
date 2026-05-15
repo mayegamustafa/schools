@@ -37,6 +37,7 @@ export default function RegisterSchoolPage() {
     name: '', types: [] as string[], secondaryLevel: 'oa' as 'o' | 'oa',
     category: '', gender: 'mixed', description: '',
     phone: '', email: '', website: '', whatsapp: '',
+    accountName: '', accountPassword: '', accountConfirm: '',
     address: '', city: '', region: '', country: 'Uganda',
     latitude: '', longitude: '',
     feesDayMin: '', feesDayMax: '',
@@ -119,11 +120,29 @@ export default function RegisterSchoolPage() {
     setLoading(true);
 
     try {
+      let authToken = token;
+
+      if (!authToken) {
+        const signupRes = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.accountName,
+            email: form.email,
+            password: form.accountPassword,
+            role: 'school',
+          }),
+        });
+        const signupData = await signupRes.json();
+        if (!signupRes.ok) throw new Error(signupData.error || 'Failed to create account');
+        authToken = signupData.token;
+      }
+
       const res = await fetch('/api/schools', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           name: form.name,
@@ -276,6 +295,37 @@ export default function RegisterSchoolPage() {
         {step === 2 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-text-primary mb-4">Contact & Location</h2>
+
+            {!token && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-text-primary mb-1">Create your account</p>
+                  <p className="text-xs text-text-secondary">You&apos;ll use this to manage your school listing. The school email below will be your login.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Your Full Name *</label>
+                  <input type="text" value={form.accountName} onChange={e => update('accountName', e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Password *</label>
+                    <input type="password" value={form.accountPassword} onChange={e => update('accountPassword', e.target.value)}
+                      placeholder="Min 8 chars"
+                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Confirm Password *</label>
+                    <input type="password" value={form.accountConfirm} onChange={e => update('accountConfirm', e.target.value)}
+                      placeholder="Repeat password"
+                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  </div>
+                </div>
+                <p className="text-xs text-text-muted">Password must be 8+ characters with uppercase, lowercase, and a number.</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Phone *</label>
@@ -284,7 +334,7 @@ export default function RegisterSchoolPage() {
                   className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">Email *</label>
+                <label className="block text-sm font-medium text-text-primary mb-2">{token ? 'Email *' : 'School Email (login) *'}</label>
                 <input type="email" required value={form.email} onChange={e => update('email', e.target.value)}
                   placeholder="info@school.ac.ug"
                   className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
@@ -344,7 +394,15 @@ export default function RegisterSchoolPage() {
                 className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors">
                 Back
               </button>
-              <button type="button" onClick={() => setStep(3)}
+              <button type="button" onClick={() => {
+                  if (!token) {
+                    const pwRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+                    if (!form.accountName.trim()) { showToast('Please enter your full name', 'error'); return; }
+                    if (!pwRule.test(form.accountPassword)) { showToast('Password must be 8+ chars with uppercase, lowercase, and a number', 'error'); return; }
+                    if (form.accountPassword !== form.accountConfirm) { showToast('Passwords do not match', 'error'); return; }
+                  }
+                  setStep(3);
+                }}
                 className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
                 Continue
               </button>
