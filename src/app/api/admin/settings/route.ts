@@ -1,41 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import {
+  DEFAULT_SCHOOL_OPTIONS,
+  DEFAULT_BRAND,
+  DEFAULT_SITE_CONTENT,
+} from '@/lib/site-defaults';
+
+export { DEFAULT_SCHOOL_OPTIONS, DEFAULT_BRAND, DEFAULT_SITE_CONTENT };
 
 const SCHOOL_OPTIONS_TITLE = 'school_options';
 const BRAND_SETTINGS_TITLE = 'brand_settings';
-
-export const DEFAULT_SCHOOL_OPTIONS = {
-  types: [
-    { value: 'kindergarten', label: 'Kindergarten' },
-    { value: 'primary', label: 'Primary School' },
-    { value: 'secondary', label: 'Secondary School' },
-    { value: 'university', label: 'University' },
-    { value: 'daycare', label: 'Daycare' },
-  ],
-  categories: [
-    { value: 'day', label: 'Day School' },
-    { value: 'boarding', label: 'Boarding School' },
-    { value: 'mixed', label: 'Day & Boarding' },
-  ],
-  genders: [
-    { value: 'mixed', label: 'Mixed (Boys & Girls)' },
-    { value: 'girls_only', label: 'Girls Only' },
-    { value: 'boys_only', label: 'Boys Only' },
-  ],
-  facilities: [
-    'Library', 'Computer Lab', 'Sports Field', 'Cafeteria',
-    'Boarding House', 'Science Lab', 'Art Room', 'Music Room',
-    'Swimming Pool', 'Chapel/Mosque',
-  ],
-};
-
-export const DEFAULT_BRAND = {
-  primaryColor: '#2d3640',
-  accentColor: '#8b7355',
-  successColor: '#446c56',
-  errorColor: '#904545',
-};
+export const SITE_CONTENT_TITLE = 'site_content';
 
 async function getSection(title: string) {
   return prisma.cmsSection.findFirst({ where: { title } });
@@ -63,14 +39,16 @@ export async function GET(request: Request) {
   const auth = await requireAuth(request, ['admin']);
   if ('response' in auth) return auth.response;
 
-  const [optionsSection, brandSection] = await Promise.all([
+  const [optionsSection, brandSection, contentSection] = await Promise.all([
     getSection(SCHOOL_OPTIONS_TITLE),
     getSection(BRAND_SETTINGS_TITLE),
+    getSection(SITE_CONTENT_TITLE),
   ]);
 
   return NextResponse.json({
     schoolOptions: parseSection(optionsSection, DEFAULT_SCHOOL_OPTIONS),
     brandSettings: parseSection(brandSection, DEFAULT_BRAND),
+    siteContent: parseSection(contentSection, DEFAULT_SITE_CONTENT),
   });
 }
 
@@ -79,7 +57,7 @@ export async function PUT(request: Request) {
   if ('response' in auth) return auth.response;
 
   const body = await request.json();
-  const { kind, data } = body as { kind: 'options' | 'brand'; data: object };
+  const { kind, data } = body as { kind: 'options' | 'brand' | 'content'; data: object };
 
   if (kind === 'options') {
     await upsertSection(SCHOOL_OPTIONS_TITLE, data);
@@ -88,6 +66,11 @@ export async function PUT(request: Request) {
 
   if (kind === 'brand') {
     await upsertSection(BRAND_SETTINGS_TITLE, data);
+    return NextResponse.json({ success: true });
+  }
+
+  if (kind === 'content') {
+    await upsertSection(SITE_CONTENT_TITLE, data);
     return NextResponse.json({ success: true });
   }
 

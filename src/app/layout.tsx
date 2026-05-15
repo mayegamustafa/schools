@@ -41,10 +41,8 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full">
-      <head>
-        {brandStyle && <style dangerouslySetInnerHTML={{ __html: brandStyle }} />}
-      </head>
       <body className="min-h-full flex flex-col antialiased">
+        <style dangerouslySetInnerHTML={{ __html: brandStyle }} />
         <AppProvider>
           {children}
           <Toast />

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { DEFAULT_SCHOOL_OPTIONS } from '@/app/api/admin/settings/route';
+import { DEFAULT_SCHOOL_OPTIONS } from '@/lib/site-defaults';
 
 export async function GET() {
   // Load admin-configured options from CmsSection; fall back to built-in defaults

@@ -6,6 +6,7 @@ import SearchBar from '@/components/schools/SearchBar';
 import SchoolCard from '@/components/schools/SchoolCard';
 import { School } from '@/types';
 import { getSchoolTypeLabel } from '@/utils/helpers';
+import { useSiteContent } from '@/context/SiteContentContext';
 import {
   PaletteIcon, BookOpenIcon, AcademicCapIcon, BuildingLibraryIcon, UserGroupSmallIcon,
   MagnifyingGlassIcon, ScaleIcon, PhoneIcon,
@@ -13,6 +14,7 @@ import {
 
 export default function HomePage() {
   const [schools, setSchools] = useState<School[]>([]);
+  const sc = useSiteContent();
 
   useEffect(() => {
     fetch('/api/schools?status=active')
@@ -37,27 +39,41 @@ export default function HomePage() {
     daycare: <UserGroupSmallIcon className="w-6 h-6 text-primary" />,
   };
 
+  const statsRow = [
+    { value: `${schools.length}+`, label: sc.stats.schoolsLabel },
+    { value: sc.stats.familiesValue, label: sc.stats.familiesLabel },
+    { value: averageRating, label: sc.stats.ratingLabel },
+    { value: sc.stats.citiesValue, label: sc.stats.citiesLabel },
+  ];
+
+  const stepIcons = [
+    <MagnifyingGlassIcon key="search" className="w-7 h-7 text-primary" />,
+    <ScaleIcon key="compare" className="w-7 h-7 text-primary" />,
+    <PhoneIcon key="contact" className="w-7 h-7 text-primary" />,
+  ];
+
   return (
     <div className="bg-background">
+      {/* Hero */}
       <section className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 lg:py-16">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-10 items-center">
             <div>
               <p className="inline-flex items-center text-xs sm:text-sm font-medium uppercase tracking-wider text-text-secondary border border-border rounded-full px-3 py-1 mb-5">
-                Trusted by families across Uganda
+                {sc.hero.badge}
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl text-text-primary mb-4">
-                Find a school that truly fits your child.
+                {sc.hero.title}
               </h1>
               <p className="text-base sm:text-lg text-text-secondary max-w-2xl leading-relaxed mb-8">
-                Search verified school profiles, compare fees and facilities, and contact schools directly from one reliable platform.
+                {sc.hero.description}
               </p>
 
               <SearchBar large className="max-w-3xl" variant="default" />
 
               <div className="flex flex-wrap items-center gap-2.5 mt-5">
                 <span className="text-sm text-text-muted">Popular:</span>
-                {['Kampala', 'Boarding Schools', 'Primary Schools', 'International'].map(tag => (
+                {sc.hero.popularTags.map(tag => (
                   <Link
                     key={tag}
                     href={`/schools?q=${encodeURIComponent(tag)}`}
@@ -69,12 +85,7 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-border">
-                {[
-                  { value: `${schools.length}+`, label: 'Schools Listed' },
-                  { value: '12K+', label: 'Families' },
-                  { value: averageRating, label: 'Avg Rating' },
-                  { value: '50+', label: 'Cities' },
-                ].map(stat => (
+                {statsRow.map(stat => (
                   <div key={stat.label}>
                     <p className="text-xl sm:text-2xl font-semibold text-text-primary">{stat.value}</p>
                     <p className="text-xs sm:text-sm text-text-secondary mt-0.5">{stat.label}</p>
@@ -87,12 +98,12 @@ export default function HomePage() {
               <div className="rounded-2xl border border-border overflow-hidden bg-surface shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200&h=900&fit=crop&q=80"
-                  alt="Students in class"
+                  src={sc.hero.imageUrl}
+                  alt={sc.hero.imageCaption || 'School hero image'}
                   className="w-full h-[340px] sm:h-[420px] object-cover"
                 />
                 <div className="p-4 border-t border-border">
-                  <p className="text-sm text-text-secondary">Updated today with new admissions and verified listings.</p>
+                  <p className="text-sm text-text-secondary">{sc.hero.imageCaption}</p>
                 </div>
               </div>
             </div>
@@ -100,6 +111,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Browse by type */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex items-end justify-between mb-7">
           <div>
@@ -125,6 +137,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Featured schools */}
       <section className="bg-surface border-y border-border py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-7">
@@ -149,6 +162,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Top rated */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex items-end justify-between mb-7">
           <div>
@@ -167,34 +181,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How it works */}
       <section className="bg-surface border-y border-border py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-10">
-            <h2 className="text-3xl text-text-primary">How it works</h2>
-            <p className="text-text-secondary mt-2">A straightforward process from discovery to contact.</p>
+            <h2 className="text-3xl text-text-primary">{sc.howItWorks.title}</h2>
+            <p className="text-text-secondary mt-2">{sc.howItWorks.subtitle}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              {
-                icon: <MagnifyingGlassIcon className="w-7 h-7 text-primary" />,
-                title: 'Search',
-                desc: 'Use location, school type, fees, and facilities to narrow your options quickly.',
-              },
-              {
-                icon: <ScaleIcon className="w-7 h-7 text-primary" />,
-                title: 'Compare',
-                desc: 'Review schools side by side so you can make clear decisions with confidence.',
-              },
-              {
-                icon: <PhoneIcon className="w-7 h-7 text-primary" />,
-                title: 'Contact',
-                desc: 'Reach schools directly through phone, email, or WhatsApp and plan your visit.',
-              },
-            ].map((step, i) => (
+            {sc.howItWorks.steps.map((step, i) => (
               <article key={step.title} className="bg-card border border-border rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span>{step.icon}</span>
+                  <span>{stepIcons[i] ?? stepIcons[0]}</span>
                   <span className="text-xs font-semibold text-text-muted">0{i + 1}</span>
                 </div>
                 <h3 className="text-xl text-text-primary mb-2">{step.title}</h3>
@@ -205,19 +204,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="rounded-2xl border border-border bg-primary text-white p-8 sm:p-10">
           <div className="max-w-2xl">
-            <h2 className="text-3xl">Run a school? Reach the right families.</h2>
-            <p className="text-white/80 mt-2 mb-6">
-              Create your listing, keep your profile updated, and receive inquiries from parents actively searching.
-            </p>
+            <h2 className="text-3xl">{sc.cta.title}</h2>
+            <p className="text-white/80 mt-2 mb-6">{sc.cta.description}</p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/schools/register" className="px-4 py-2.5 rounded-md bg-white text-primary font-medium hover:bg-white/90 transition-colors">
-                List Your School
+              <Link href={sc.cta.primaryHref} className="px-4 py-2.5 rounded-md bg-white text-primary font-medium hover:bg-white/90 transition-colors">
+                {sc.cta.primaryLabel}
               </Link>
-              <Link href="/pricing" className="px-4 py-2.5 rounded-md border border-white/30 text-white font-medium hover:bg-white/10 transition-colors">
-                View Pricing
+              <Link href={sc.cta.secondaryHref} className="px-4 py-2.5 rounded-md border border-white/30 text-white font-medium hover:bg-white/10 transition-colors">
+                {sc.cta.secondaryLabel}
               </Link>
             </div>
           </div>
