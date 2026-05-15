@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import Toast from "@/components/ui/Toast";
 import { prisma } from "@/lib/prisma";
+import { deriveColorVars } from "@/lib/site-defaults";
 
 export const metadata: Metadata = {
   title: "SchoolFinder — Discover & Compare the Best Schools",
@@ -22,13 +23,24 @@ async function getBrandStyle(): Promise<string> {
     const section = await prisma.cmsSection.findFirst({ where: { title: 'brand_settings' } });
     if (!section) return '';
     const b = JSON.parse(section.content) as Record<string, string>;
+
+    const primary = deriveColorVars(b.primaryColor || '#2d3640');
+    const accent  = deriveColorVars(b.accentColor  || '#8b7355');
+    const success = deriveColorVars(b.successColor || '#446c56');
+    const error   = deriveColorVars(b.errorColor   || '#904545');
+
     const vars = [
-      b.primaryColor && `--color-primary:${b.primaryColor}`,
-      b.accentColor  && `--color-accent:${b.accentColor}`,
-      b.successColor && `--color-success:${b.successColor}`,
-      b.errorColor   && `--color-error:${b.errorColor}`,
-    ].filter(Boolean).join(';');
-    return vars ? `:root{${vars}}` : '';
+      `--color-primary:${primary.base}`,
+      `--color-primary-light:${primary.light}`,
+      `--color-primary-dark:${primary.dark}`,
+      `--color-accent:${accent.base}`,
+      `--color-accent-light:${accent.light}`,
+      `--color-accent-dark:${accent.dark}`,
+      `--color-success:${success.base}`,
+      `--color-success-light:${success.light}`,
+      `--color-error:${error.base}`,
+    ].join(';');
+    return `:root{${vars}}`;
   } catch {
     return '';
   }

@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-function resolveAuthSecret(): string {
-  const s = process.env.AUTH_SECRET;
-  if (!s) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('AUTH_SECRET environment variable is required in production');
-    }
-    return 'schoolfinder-dev-secret-change-in-production';
-  }
-  return s;
-}
-
-const secret = () => new TextEncoder().encode(resolveAuthSecret());
+const secret = () => new TextEncoder().encode(process.env.AUTH_SECRET || 'schoolfinder-dev-secret-change-in-production');
 
 function normalizeRole(role: string | null): string {
   if (!role) return 'guest';

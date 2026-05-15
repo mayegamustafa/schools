@@ -1,5 +1,6 @@
-import { v2 as cloudinary } from 'cloudinary';
-import type { UploadApiOptions, UploadApiResponse } from 'cloudinary';
+import { mkdir, writeFile } from 'fs/promises';
+import path from 'path';
+import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -7,25 +8,19 @@ import { logAudit } from '@/lib/audit';
 
 export const runtime = 'nodejs';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 30 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ALLOWED_VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
 
-function uploadToCloudinary(buffer: Buffer, options: UploadApiOptions): Promise<UploadApiResponse> {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
-      if (error || !result) return reject(error ?? new Error('Upload failed'));
-      resolve(result);
-    });
-    stream.end(buffer);
-  });
+function getExtension(file: File): string {
+  const nameExt = file.name.includes('.') ? file.name.split('.').pop() : '';
+  if (nameExt) return `.${String(nameExt).toLowerCase()}`;
+  if (file.type === 'image/png') return '.png';
+  if (file.type === 'image/webp') return '.webp';
+  if (file.type === 'video/webm') return '.webm';
+  if (file.type === 'video/quicktime') return '.mov';
+  return '.jpg';
 }
 
 export async function POST(request: Request) {
@@ -68,14 +63,14 @@ export async function POST(request: Request) {
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+  const baseDir = path.join(process.cwd(), 'public', 'uploads', 'schools', school.id, isVideo ? 'videos' : 'images');
+  await mkdir(baseDir, { recursive: true });
 
-  const folder = `schools/${school.id}/${isVideo ? 'videos' : 'images'}`;
-  const result = await uploadToCloudinary(buffer, {
-    folder,
-    resource_type: isVideo ? 'video' : 'image',
-  });
+  const filename = `${Date.now()}-${randomUUID()}${getExtension(file)}`;
+  const destination = path.join(baseDir, filename);
+  await writeFile(destination, buffer);
 
-  const urlPath = result.secure_url;
+  const urlPath = `/uploads/schools/${school.id}/${isVideo ? 'videos' : 'images'}/${filename}`;
 
   await logAudit(auth.claims.sub, auth.claims.name, 'media.uploaded', 'school', school.id, {
     kind,

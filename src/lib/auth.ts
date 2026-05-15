@@ -17,18 +17,9 @@ interface AuthUser {
   role: AuthRole;
 }
 
-function resolveAuthSecret(): string {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('AUTH_SECRET environment variable is required in production');
-    }
-    return 'schoolfinder-dev-secret-change-in-production';
-  }
-  return secret;
-}
-
-const AUTH_SECRET_KEY = new TextEncoder().encode(resolveAuthSecret());
+const DEFAULT_DEV_SECRET = 'schoolfinder-dev-secret-change-in-production';
+const AUTH_SECRET = process.env.AUTH_SECRET || DEFAULT_DEV_SECRET;
+const AUTH_SECRET_KEY = new TextEncoder().encode(AUTH_SECRET);
 
 export function normalizeRole(role: string | null | undefined): AuthRole {
   if (!role) return 'guest';

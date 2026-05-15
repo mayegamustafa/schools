@@ -12,7 +12,6 @@ const ADMIN_NAV = [
   { href: '/admin/plans', label: 'Plans' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/reports', label: 'Reports' },
-  { href: '/admin/settings', label: 'Settings' },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {

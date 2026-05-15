@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { DEFAULT_SITE_CONTENT } from '@/lib/site-defaults';
-import type { SiteContent, HowItWorksStep, FooterColumn, NavLink } from '@/lib/site-defaults';
+import { DEFAULT_SITE_CONTENT, COLOR_PRESETS, deriveColorVars } from '@/lib/site-defaults';
+import type { SiteContent, HowItWorksStep, FooterColumn, NavLink, ColorPreset } from '@/lib/site-defaults';
 
 interface OptionItem { value: string; label: string; }
 interface SchoolOptions {
@@ -62,6 +62,78 @@ function OptionSection({
 }
 
 const inputCls = 'w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white text-text-primary';
+
+function ImageUploadField({
+  label, value, onChange, placeholder, token,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  placeholder?: string;
+  token: string | null;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useState<HTMLInputElement | null>(null);
+  const fileRef = { current: null as HTMLInputElement | null };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('kind', file.type.startsWith('video/') ? 'video' : 'image');
+      const res = await fetch('/api/admin/uploads', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      onChange(data.url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  void inputRef; // suppress unused warning
+
+  return (
+    <div className="space-y-1">
+      <label className="block text-xs font-medium text-text-secondary">{label}</label>
+      <div className="flex gap-2 items-center">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder ?? 'https://… or upload below'}
+          className={inputCls + ' flex-1'}
+        />
+        <label className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-xs font-medium cursor-pointer transition-colors ${
+          uploading ? 'opacity-50 cursor-not-allowed bg-surface' : 'bg-surface hover:bg-hover text-text-secondary hover:text-text-primary'
+        }`}>
+          {uploading ? 'Uploading…' : '⬆ Upload'}
+          <input
+            ref={el => { fileRef.current = el; }}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+            className="hidden"
+            disabled={uploading}
+            onChange={handleFile}
+          />
+        </label>
+      </div>
+      {value && !value.startsWith('data:') && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt="preview" className="mt-1.5 h-24 w-full object-cover rounded-lg border border-border" />
+      )}
+    </div>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -175,6 +247,23 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const applyBrandToPage = (b: typeof brand) => {
+    const primary = deriveColorVars(b.primaryColor);
+    const accent  = deriveColorVars(b.accentColor);
+    const success = deriveColorVars(b.successColor);
+    const error   = deriveColorVars(b.errorColor);
+    const root = document.documentElement;
+    root.style.setProperty('--color-primary',       primary.base);
+    root.style.setProperty('--color-primary-light', primary.light);
+    root.style.setProperty('--color-primary-dark',  primary.dark);
+    root.style.setProperty('--color-accent',        accent.base);
+    root.style.setProperty('--color-accent-light',  accent.light);
+    root.style.setProperty('--color-accent-dark',   accent.dark);
+    root.style.setProperty('--color-success',       success.base);
+    root.style.setProperty('--color-success-light', success.light);
+    root.style.setProperty('--color-error',         error.base);
+  };
+
   const saveBrand = async () => {
     setSaving('brand');
     try {
@@ -184,11 +273,7 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ kind: 'brand', data: brand }),
       });
       if (!res.ok) throw new Error();
-      // Apply immediately to current page without reload
-      document.documentElement.style.setProperty('--color-primary', brand.primaryColor);
-      document.documentElement.style.setProperty('--color-accent', brand.accentColor);
-      document.documentElement.style.setProperty('--color-success', brand.successColor);
-      document.documentElement.style.setProperty('--color-error', brand.errorColor);
+      applyBrandToPage(brand);
       showToast('Brand colors saved — applied site-wide', 'success');
     } catch {
       showToast('Failed to save brand settings', 'error');
@@ -295,37 +380,81 @@ export default function AdminSettingsPage() {
 
       {/* ── Brand Colors tab ── */}
       {activeTab === 'brand' && (
-        <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+        <div className="bg-white rounded-2xl border border-border p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-text-primary">Brand Colors</h2>
-              <p className="text-xs text-text-muted mt-0.5">Applied site-wide on every page load.</p>
+              <p className="text-xs text-text-muted mt-0.5">Applied site-wide on every page load. Light and dark variants are auto-computed.</p>
             </div>
             <button type="button" onClick={saveBrand} disabled={saving === 'brand'}
               className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium disabled:opacity-50 hover:bg-primary-dark transition-colors">
               {saving === 'brand' ? 'Saving…' : 'Save Colors'}
             </button>
           </div>
+
+          {/* Preset themes */}
+          <div>
+            <p className="text-xs font-medium text-text-secondary mb-3">Quick-apply a preset theme:</p>
+            <div className="flex flex-wrap gap-2">
+              {COLOR_PRESETS.map((preset: ColorPreset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => {
+                    const next = {
+                      primaryColor: preset.primaryColor,
+                      accentColor: preset.accentColor,
+                      successColor: preset.successColor,
+                      errorColor: preset.errorColor,
+                    };
+                    setBrand(next);
+                    applyBrandToPage(next);
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-hover transition-colors text-xs font-medium text-text-secondary"
+                >
+                  <span className="flex gap-0.5">
+                    <span className="w-3 h-3 rounded-full inline-block" style={{ background: preset.primaryColor }} />
+                    <span className="w-3 h-3 rounded-full inline-block" style={{ background: preset.accentColor }} />
+                  </span>
+                  {preset.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color pickers */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {([
               { key: 'primaryColor', label: 'Primary' },
               { key: 'accentColor', label: 'Accent' },
               { key: 'successColor', label: 'Success' },
               { key: 'errorColor', label: 'Error / Danger' },
-            ] as const).map(({ key, label }) => (
-              <div key={key}>
-                <label className="block text-xs font-medium text-text-secondary mb-1">{label}</label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={brand[key]}
-                    onChange={e => setBrand(p => ({ ...p, [key]: e.target.value }))}
-                    className="w-10 h-10 rounded-lg border border-border cursor-pointer p-0.5" />
-                  <input type="text" value={brand[key]}
-                    onChange={e => setBrand(p => ({ ...p, [key]: e.target.value }))}
-                    className="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+            ] as const).map(({ key, label }) => {
+              const derived = deriveColorVars(brand[key]);
+              return (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">{label}</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={brand[key]}
+                      onChange={e => { const next = { ...brand, [key]: e.target.value }; setBrand(next); applyBrandToPage(next); }}
+                      className="w-10 h-10 rounded-lg border border-border cursor-pointer p-0.5" />
+                    <input type="text" value={brand[key]}
+                      onChange={e => { const next = { ...brand, [key]: e.target.value }; setBrand(next); if (/^#[0-9a-f]{6}$/i.test(e.target.value)) applyBrandToPage(next); }}
+                      className="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  </div>
+                  {/* Light / dark preview row */}
+                  <div className="mt-2 flex gap-1">
+                    <div className="flex-1 h-5 rounded-l-md border border-border" style={{ background: derived.light }} title="Light variant" />
+                    <div className="flex-1 h-5 border-t border-b border-border" style={{ background: derived.base }} title="Base" />
+                    <div className="flex-1 h-5 rounded-r-md border border-border" style={{ background: derived.dark }} title="Dark variant" />
+                  </div>
+                  <div className="flex justify-between mt-0.5">
+                    <span className="text-[9px] text-text-muted">Light</span>
+                    <span className="text-[9px] text-text-muted">Dark</span>
+                  </div>
                 </div>
-                <div className="mt-2 h-6 rounded-md border border-border" style={{ background: brand[key] }} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -362,11 +491,13 @@ export default function AdminSettingsPage() {
               </div>
             </Field>
             {content.logoType === 'image' && (
-              <Field label="Logo Image URL">
-                <input value={content.logoImageUrl}
-                  onChange={e => setContent(p => ({ ...p, logoImageUrl: e.target.value }))}
-                  className={inputCls} placeholder="https://…" />
-              </Field>
+              <ImageUploadField
+                label="Logo Image"
+                value={content.logoImageUrl}
+                onChange={url => setContent(p => ({ ...p, logoImageUrl: url }))}
+                placeholder="https://… or click ⬆ Upload"
+                token={token}
+              />
             )}
           </ContentCard>
 
@@ -387,15 +518,13 @@ export default function AdminSettingsPage() {
                 onChange={e => setContent(p => ({ ...p, hero: { ...p.hero, description: e.target.value } }))}
                 className={inputCls} />
             </Field>
-            <Field label="Banner Image URL">
-              <input value={content.hero.imageUrl}
-                onChange={e => setContent(p => ({ ...p, hero: { ...p.hero, imageUrl: e.target.value } }))}
-                className={inputCls} placeholder="https://…" />
-              {content.hero.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={content.hero.imageUrl} alt="preview" className="mt-2 h-28 w-full object-cover rounded-lg border border-border" />
-              )}
-            </Field>
+            <ImageUploadField
+              label="Banner Image"
+              value={content.hero.imageUrl}
+              onChange={url => setContent(p => ({ ...p, hero: { ...p.hero, imageUrl: url } }))}
+              placeholder="https://… or click ⬆ Upload"
+              token={token}
+            />
             <Field label="Image Caption">
               <input value={content.hero.imageCaption}
                 onChange={e => setContent(p => ({ ...p, hero: { ...p.hero, imageCaption: e.target.value } }))}
