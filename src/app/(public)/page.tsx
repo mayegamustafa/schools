@@ -25,19 +25,20 @@ export default function HomePage() {
 
   const featuredSchools = schools.filter(s => s.isFeatured);
   const topRated = [...schools].sort((a, b) => b.rating - a.rating).slice(0, 4);
-  const schoolTypeOrder: School['type'][] = ['kindergarten', 'primary', 'secondary', 'university', 'daycare'];
+  const schoolTypeOrder: School['type'][] = ['daycare', 'kindergarten', 'primary', 'secondary', 'tertiary', 'university'];
   const schoolTypes = schoolTypeOrder.filter(type => schools.some(s => s.type === type));
   const averageRating = schools.length > 0
     ? (schools.reduce((sum, s) => sum + s.rating, 0) / schools.length).toFixed(1)
     : '0.0';
 
   const typeIcons = {
+    daycare: <UserGroupSmallIcon className="w-6 h-6 text-primary" />,
     kindergarten: <PaletteIcon className="w-6 h-6 text-primary" />,
     primary: <BookOpenIcon className="w-6 h-6 text-primary" />,
     secondary: <AcademicCapIcon className="w-6 h-6 text-primary" />,
+    tertiary: <BuildingLibraryIcon className="w-6 h-6 text-primary" />,
     university: <BuildingLibraryIcon className="w-6 h-6 text-primary" />,
-    daycare: <UserGroupSmallIcon className="w-6 h-6 text-primary" />,
-  };
+  } as Record<string, ReturnType<typeof UserGroupSmallIcon>>;
 
   const statsRow = [
     { value: `${schools.length}+`, label: sc.stats.schoolsLabel },

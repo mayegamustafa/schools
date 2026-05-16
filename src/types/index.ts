@@ -43,7 +43,7 @@ export interface School {
   updatedAt: string;
 }
 
-export type SchoolType = 'kindergarten' | 'primary' | 'secondary' | 'university' | 'daycare';
+export type SchoolType = 'kindergarten' | 'primary' | 'secondary' | 'secondary_o' | 'secondary_oa' | 'tertiary' | 'university' | 'daycare';
 export type SchoolCategory = 'day' | 'boarding' | 'mixed';
 export type SchoolGender = 'mixed' | 'girls_only' | 'boys_only';
 

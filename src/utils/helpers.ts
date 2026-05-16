@@ -28,6 +28,7 @@ export function getSchoolTypeLabel(type: string): string {
     secondary: 'Secondary School',
     secondary_o: 'Secondary (O Level)',
     secondary_oa: 'Secondary (O & A Level)',
+    tertiary: 'Tertiary Institution',
     university: 'University',
     daycare: 'Daycare',
   };
@@ -57,6 +58,7 @@ export function getSchoolTypeColor(type: string): string {
     kindergarten: 'bg-accent/10 text-accent-dark',
     primary: 'bg-primary/10 text-primary',
     secondary: 'bg-secondary/10 text-secondary',
+    tertiary: 'bg-purple-100 text-purple-700',
     university: 'bg-hover text-text-secondary',
     daycare: 'bg-success/10 text-success',
   };

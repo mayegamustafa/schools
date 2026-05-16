@@ -44,7 +44,14 @@ export default function RegisterSchoolPage() {
     facilities: [] as string[],
   });
 
-  const schoolTypes = optionsData?.types || [];
+  const schoolTypes: SelectOption[] = [
+    { value: 'daycare', label: 'Daycare' },
+    { value: 'kindergarten', label: 'Kindergarten' },
+    { value: 'primary', label: 'Primary School' },
+    { value: 'secondary', label: 'Secondary School' },
+    { value: 'tertiary', label: 'Tertiary Institution' },
+    { value: 'university', label: 'University' },
+  ];
   const schoolCategories = optionsData?.categories || [];
   const schoolGenders = optionsData?.genders || [];
   const facilities = optionsData?.facilities || [];
