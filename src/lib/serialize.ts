@@ -1,5 +1,5 @@
 import { School, Review } from '@/types';
-import type { School as DbSchool, Review as DbReview } from '@prisma/client';
+import type { School as DbSchool, Review as DbReview } from '@/generated/prisma/client';
 
 const FALLBACK_COVER_IMAGE = '/students-working-laptop-school.jpg';
 const FALLBACK_LOGO_IMAGE = '/file.svg';
