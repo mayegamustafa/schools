@@ -6,12 +6,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 
 const ADMIN_NAV = [
-  { href: '/admin', label: 'Overview' },
+  { href: '/admin', label: 'Overview', exact: true },
   { href: '/admin/schools', label: 'Schools' },
   { href: '/admin/payments', label: 'Payments' },
   { href: '/admin/plans', label: 'Plans' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/reports', label: 'Reports' },
+  { href: '/admin/support', label: 'Support' },
+  { href: '/admin/audit', label: 'Audit Log' },
+  { href: '/admin/settings', label: 'Settings' },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -57,8 +60,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
         <nav className="p-2 space-y-1">
           {ADMIN_NAV.map(item => {
-            const isActive = item.href === '/admin'
-              ? pathname === '/admin'
+            const isActive = item.exact
+              ? pathname === item.href
               : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link

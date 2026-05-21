@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Find, compare, and connect with top-rated schools near you. Kindergartens, primary schools, secondary schools, and universities — all in one trusted platform.",
   manifest: "/manifest.json",
   icons: { apple: "/icon-192.png" },
+  // Native iOS Safari Smart App Banner — update app-id when the app is published
+  other: { 'apple-itunes-app': 'app-id=000000000' },
 };
 
 export const viewport: Viewport = {
