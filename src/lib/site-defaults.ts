@@ -152,7 +152,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   logoType: 'icon',
   logoImageUrl: '',
   hero: {
-    badge: 'Trusted by families across Uganda',
+    badge: '',
     title: 'Find a school that truly fits your child.',
     description: 'Search verified school profiles, compare fees and facilities, and contact schools directly from one reliable platform.',
     imageUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200&h=900&fit=crop&q=80',

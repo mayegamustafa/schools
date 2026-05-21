@@ -60,9 +60,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 lg:py-16">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-10 items-center">
             <div>
-              <p className="inline-flex items-center text-xs sm:text-sm font-medium uppercase tracking-wider text-text-secondary border border-border rounded-full px-3 py-1 mb-5">
-                {sc.hero.badge}
-              </p>
+              {sc.hero.badge && (
+                <p className="inline-flex items-center text-xs sm:text-sm font-medium uppercase tracking-wider text-text-secondary border border-border rounded-full px-3 py-1 mb-5">
+                  {sc.hero.badge}
+                </p>
+              )}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl text-text-primary mb-4">
                 {sc.hero.title}
               </h1>

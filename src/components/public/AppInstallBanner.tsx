@@ -1,40 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MOBILE_APP, BANNER_DISMISSED_KEY } from '@/lib/mobile-app';
+import { BANNER_DISMISSED_KEY } from '@/lib/mobile-app';
 
 export default function AppInstallBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
-
-    const ua = navigator.userAgent;
-    if (/Android/.test(ua)) {
-      setShow(true);
-      document.body.classList.add('banner-visible');
-    }
-
-    return () => {
-      document.body.classList.remove('banner-visible');
-    };
+    if (/Android/.test(navigator.userAgent)) setShow(true);
   }, []);
 
   function handleDismiss() {
     localStorage.setItem(BANNER_DISMISSED_KEY, '1');
-    document.body.classList.remove('banner-visible');
     setShow(false);
   }
 
   function handleGet() {
-    window.location.href = MOBILE_APP.apkUrl;
+    window.location.href = '/api/app/download';
   }
 
   if (!show) return null;
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[60] h-[52px] flex items-center px-3 gap-3 border-b border-white/10 animate-[fade-in_0.25s_ease]"
+      className="fixed bottom-0 left-0 right-0 z-[60] h-[52px] flex items-center px-3 gap-3 border-t border-white/10 animate-[fade-in_0.25s_ease]"
       style={{ backgroundColor: 'var(--color-primary)' }}
     >
       {/* App icon */}
