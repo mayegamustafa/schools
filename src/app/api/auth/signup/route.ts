@@ -5,6 +5,7 @@ import { createAuthToken, normalizeRole } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const COOKIE_MAX_AGE = 60 * 60 * 24;
 
 export async function POST(request: Request) {
@@ -14,6 +15,14 @@ export async function POST(request: Request) {
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
+    }
+
+    if (!EMAIL_RULE.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
+    }
+
+    if (String(name).trim().length < 2) {
+      return NextResponse.json({ error: 'Name must be at least 2 characters' }, { status: 400 });
     }
 
     if (!PASSWORD_RULE.test(String(password))) {

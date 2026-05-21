@@ -4,17 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { School } from '@/types';
-import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolGenderLabel, getSchoolTypeColor, getSchoolTypeLabel, sanitizeImageSrc } from '@/utils/helpers';
+import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolCategoryLabel, getSchoolGenderLabel, getSchoolTypeColor, getSchoolTypeLabel, sanitizeImageSrc } from '@/utils/helpers';
 
 interface SchoolCardProps {
   school: School;
   layout?: 'grid' | 'list';
-}
-
-function categoryLabel(category: School['category']) {
-  if (category === 'day') return 'Day School';
-  if (category === 'boarding') return 'Boarding School';
-  return 'Day and Boarding';
 }
 
 export default function SchoolCard({ school, layout = 'grid' }: SchoolCardProps) {
@@ -108,7 +102,7 @@ export default function SchoolCard({ school, layout = 'grid' }: SchoolCardProps)
               {getSchoolTypeLabel(school.type)}
             </span>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-hover text-text-secondary">
-              {categoryLabel(school.category)}
+              {getSchoolCategoryLabel(school.category)}
             </span>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-secondary/10 text-secondary">
               {getSchoolGenderLabel(school.gender)}

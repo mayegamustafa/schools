@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
@@ -9,8 +9,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setUser, setToken, showToast } = useApp();
+  const { setUser, setToken, showToast, user } = useApp();
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') router.replace('/admin');
+      else if (user.role === 'school') router.replace('/dashboard');
+      else router.replace('/');
+    }
+  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +124,10 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-text-muted mt-6">
-          Demo admin: admin@schoolfinder.co.ug / admin123 | Demo school: grace@schoolfinder.co.ug / School123
+          By signing in you agree to our{' '}
+          <Link href="/terms" className="hover:text-text-secondary">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="hover:text-text-secondary">Privacy Policy</Link>.
         </p>
       </div>
     </div>

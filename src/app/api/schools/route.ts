@@ -1,17 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { serializeSchool, slugify } from '@/lib/serialize';
-import { verifyAuthToken } from '@/lib/auth';
+import { getBearerToken, verifyAuthToken } from '@/lib/auth';
 
-function getBearerToken(request: Request): string | null {
-  const header = request.headers.get('authorization');
-  if (!header) return null;
-
-  const [scheme, token] = header.split(' ');
-  if (!scheme || !token || scheme.toLowerCase() !== 'bearer') return null;
-
-  return token.trim();
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -117,6 +108,35 @@ export async function POST(request: Request) {
     dayMin, dayMax, boardingMin, boardingMax,
     facilities } = body;
 
+  // Required field validation
+  const missing: string[] = [];
+  if (!name || String(name).trim().length < 2) missing.push('name');
+  if (!type) missing.push('type');
+  if (!category) missing.push('category');
+  if (!description || String(description).trim().length < 10) missing.push('description');
+  if (!phone || String(phone).trim().length < 6) missing.push('phone');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email).trim())) missing.push('email');
+  if (!address || String(address).trim().length < 5) missing.push('address');
+  if (!city || String(city).trim().length < 2) missing.push('city');
+  if (!region || String(region).trim().length < 2) missing.push('region');
+
+  if (missing.length > 0) {
+    return NextResponse.json(
+      { error: `Missing or invalid required fields: ${missing.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
+  const VALID_TYPES = ['daycare', 'kindergarten', 'primary', 'secondary', 'secondary_o', 'secondary_oa', 'tertiary', 'university'];
+  if (!VALID_TYPES.includes(String(type))) {
+    return NextResponse.json({ error: 'Invalid school type' }, { status: 400 });
+  }
+
+  const VALID_CATEGORIES = ['day', 'boarding', 'mixed'];
+  if (!VALID_CATEGORIES.includes(String(category))) {
+    return NextResponse.json({ error: 'Invalid school category' }, { status: 400 });
+  }
+
   const normalizedGender = ['mixed', 'girls_only', 'boys_only'].includes(String(gender))
     ? String(gender)
     : 'mixed';
@@ -126,31 +146,27 @@ export async function POST(request: Request) {
   const safeDayMin = Number.isFinite(parsedDayMin) && parsedDayMin > 0 ? parsedDayMin : 0;
   const safeDayMax = Number.isFinite(parsedDayMax) && parsedDayMax > 0 ? parsedDayMax : 0;
 
-  if (!name || !type || !category || !description || !phone || !email || !address || !city || !region) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
   let slug = slugify(name);
   const existing = await prisma.school.findUnique({ where: { slug } });
   if (existing) slug = `${slug}-${Date.now().toString(36)}`;
 
   const school = await prisma.school.create({
     data: {
-      name: String(name).slice(0, 200),
+      name: String(name).trim().slice(0, 200),
       slug,
       ownerUserId: claims?.sub || null,
       type,
       category,
       gender: normalizedGender,
-      description: String(description).slice(0, 5000),
-      shortDescription: String(shortDescription || description).slice(0, 300),
-      phone: String(phone).slice(0, 50),
-      email: String(email).slice(0, 200),
+      description: String(description).trim().slice(0, 5000),
+      shortDescription: String(shortDescription || description).trim().slice(0, 300),
+      phone: String(phone).trim().slice(0, 50),
+      email: String(email).trim().toLowerCase().slice(0, 200),
       website: website || null,
       whatsapp: whatsapp || null,
-      address: String(address).slice(0, 500),
-      city: String(city).slice(0, 100),
-      region: String(region).slice(0, 100),
+      address: String(address).trim().slice(0, 500),
+      city: String(city).trim().slice(0, 100),
+      region: String(region).trim().slice(0, 100),
       country: country || 'Uganda',
       latitude: Number(latitude) || 0,
       longitude: Number(longitude) || 0,

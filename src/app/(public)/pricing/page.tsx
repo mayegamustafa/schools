@@ -61,8 +61,17 @@ export default function PricingPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
         {loading ? (
-          <div className="md:col-span-2 bg-white rounded-2xl border border-border p-8 text-center text-text-secondary">
-            Loading plans...
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {[1, 2].map(i => (
+              <div key={i} className="bg-white rounded-2xl border border-border p-8 space-y-4">
+                <div className="skeleton h-5 w-24 rounded-full" />
+                <div className="skeleton h-9 w-32" />
+                <div className="space-y-3 pt-2">
+                  {[1, 2, 3, 4].map(j => <div key={j} className="skeleton h-4 w-full" />)}
+                </div>
+                <div className="skeleton h-12 w-full rounded-xl mt-4" />
+              </div>
+            ))}
           </div>
         ) : plans.length === 0 ? (
           <div className="md:col-span-2 bg-white rounded-2xl border border-border p-8 text-center text-text-secondary">

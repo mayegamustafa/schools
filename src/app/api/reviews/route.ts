@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { serializeReview } from '@/lib/serialize';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -19,18 +20,28 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { schoolId, rating, title, content, userName } = body;
+  const auth = await requireAuth(request, ['user', 'school', 'admin']);
+  if ('response' in auth) return auth.response;
 
-  if (!schoolId || !rating || !title || !content || !userName) {
+  const body = await request.json();
+  const { schoolId, rating, title, content } = body;
+
+  if (!schoolId || !rating || !title || !content) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  if (Number(rating) < 1 || Number(rating) > 5) {
-    return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 });
+  const ratingNum = Number(rating);
+  if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    return NextResponse.json({ error: 'Rating must be a whole number between 1 and 5' }, { status: 400 });
   }
 
-  // Verify school exists
+  if (String(title).trim().length < 3) {
+    return NextResponse.json({ error: 'Title must be at least 3 characters' }, { status: 400 });
+  }
+  if (String(content).trim().length < 10) {
+    return NextResponse.json({ error: 'Review must be at least 10 characters' }, { status: 400 });
+  }
+
   const school = await prisma.school.findUnique({ where: { id: schoolId } });
   if (!school) {
     return NextResponse.json({ error: 'School not found' }, { status: 404 });
@@ -39,15 +50,14 @@ export async function POST(request: Request) {
   const review = await prisma.review.create({
     data: {
       schoolId,
-      userId: 'anonymous',
-      userName: String(userName).slice(0, 100),
-      rating: Number(rating),
-      title: String(title).slice(0, 200),
-      content: String(content).slice(0, 2000),
+      userId: auth.claims.sub,
+      userName: auth.claims.name.slice(0, 100),
+      rating: ratingNum,
+      title: String(title).trim().slice(0, 200),
+      content: String(content).trim().slice(0, 2000),
     },
   });
 
-  // Recalculate school rating
   const aggregate = await prisma.review.aggregate({
     where: { schoolId },
     _avg: { rating: true },

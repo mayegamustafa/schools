@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { School, Review } from '@/types';
 import { StarRating } from '@/components/ui/StarRating';
+import { SchoolProfileSkeleton } from '@/components/ui/Skeletons';
 import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolTypeLabel, getSchoolCategoryLabel, getSchoolGenderLabel, getSchoolTypeColor, formatDate, sanitizeImageSrc } from '@/utils/helpers';
 import {
   TruckIcon, BookOpenIcon, BeakerIcon, ComputerDesktopIcon, TrophyIcon,
@@ -27,6 +28,8 @@ export default function SchoolProfilePage({ params }: { params: Promise<{ id: st
   const [subject, setSubject] = useState('Admission inquiry');
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', content: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -80,7 +83,7 @@ export default function SchoolProfilePage({ params }: { params: Promise<{ id: st
   }, [school]);
 
   if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-text-secondary">Loading school details...</div>;
+    return <SchoolProfileSkeleton />;
   }
 
   if (!school) return notFound();
@@ -109,6 +112,31 @@ export default function SchoolProfilePage({ params }: { params: Promise<{ id: st
     : [safeCoverImage];
   const safeVideos = school.videos.map(video => video.trim()).filter(Boolean);
   const safeGalleryIndex = Math.min(galleryIndex, safeGallery.length - 1);
+
+  const submitReview = async () => {
+    if (!token || !school) return;
+    if (!reviewForm.title.trim() || !reviewForm.content.trim()) {
+      showToast('Please fill in the title and review', 'error');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ schoolId: school.id, rating: reviewForm.rating, title: reviewForm.title.trim(), content: reviewForm.content.trim() }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || 'Failed to submit review');
+      setReviews(prev => [payload.review, ...prev]);
+      setReviewForm({ rating: 5, title: '', content: '' });
+      showToast('Review submitted!', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to submit review', 'error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const startConversation = async () => {
     if (!token || !school || !subject.trim() || !message.trim()) return;
@@ -434,10 +462,46 @@ export default function SchoolProfilePage({ params }: { params: Promise<{ id: st
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-text-primary">Reviews</h2>
-                  <Link href="/auth/login" className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
-                    Write a Review
-                  </Link>
+                  {!token && (
+                    <Link href="/auth/login" className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+                      Sign in to review
+                    </Link>
+                  )}
                 </div>
+
+                {token && (
+                  <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+                    <h3 className="text-base font-semibold text-text-primary">Write a Review</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">Rating</label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button key={star} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: star }))}
+                            className={`text-2xl transition-transform hover:scale-110 ${star <= reviewForm.rating ? 'text-accent' : 'text-gray-300'}`}>
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">Title</label>
+                      <input type="text" value={reviewForm.title} onChange={e => setReviewForm(f => ({ ...f, title: e.target.value }))}
+                        placeholder="Summarise your experience"
+                        className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">Review</label>
+                      <textarea value={reviewForm.content} onChange={e => setReviewForm(f => ({ ...f, content: e.target.value }))}
+                        rows={4} placeholder="Share your experience with this school..."
+                        className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none" />
+                    </div>
+                    <button onClick={submitReview} disabled={submittingReview}
+                      className="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-60">
+                      {submittingReview ? 'Submitting...' : 'Submit Review'}
+                    </button>
+                  </div>
+                )}
+
                 {reviews.length > 0 ? reviews.map(review => (
                   <div key={review.id} className="bg-white rounded-2xl border border-border p-6">
                     <div className="flex items-start justify-between mb-3">
