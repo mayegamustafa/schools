@@ -70,8 +70,14 @@ export default function ComparePage() {
         </div>
       </div>
 
+      <p className="sm:hidden flex items-center gap-1.5 text-xs text-text-muted mb-2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        Scroll sideways to compare all schools
+      </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px]">
+        <table className="w-full min-w-[540px]">
           <thead>
             <tr>
               <th className="text-left p-4 bg-gray-50 rounded-tl-2xl w-48">

@@ -3,20 +3,15 @@
 import { useEffect, useState } from 'react';
 import { MOBILE_APP, BANNER_DISMISSED_KEY } from '@/lib/mobile-app';
 
-type Platform = 'ios' | 'android';
-
 export default function AppInstallBanner() {
-  const [platform, setPlatform] = useState<Platform | null>(null);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
 
     const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua) && !('MSStream' in window)) {
-      setPlatform('ios');
-      document.body.classList.add('banner-visible');
-    } else if (/Android/.test(ua)) {
-      setPlatform('android');
+    if (/Android/.test(ua)) {
+      setShow(true);
       document.body.classList.add('banner-visible');
     }
 
@@ -28,21 +23,18 @@ export default function AppInstallBanner() {
   function handleDismiss() {
     localStorage.setItem(BANNER_DISMISSED_KEY, '1');
     document.body.classList.remove('banner-visible');
-    setPlatform(null);
+    setShow(false);
   }
 
   function handleGet() {
-    const storeUrl = platform === 'ios' ? MOBILE_APP.appStoreUrl : MOBILE_APP.playStoreUrl;
-    window.location.href = `${MOBILE_APP.scheme}://`;
-    setTimeout(() => {
-      if (!document.hidden) window.location.href = storeUrl;
-    }, 1500);
+    window.location.href = MOBILE_APP.apkUrl;
   }
 
-  if (!platform) return null;
+  if (!show) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] h-[52px] flex items-center px-3 gap-3 border-b border-white/10 animate-[fade-in_0.25s_ease]"
+    <div
+      className="fixed top-0 left-0 right-0 z-[60] h-[52px] flex items-center px-3 gap-3 border-b border-white/10 animate-[fade-in_0.25s_ease]"
       style={{ backgroundColor: 'var(--color-primary)' }}
     >
       {/* App icon */}
@@ -57,7 +49,7 @@ export default function AppInstallBanner() {
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: 'white' }}>SchoolFinder</p>
         <p className="text-[11px] leading-tight truncate" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          {platform === 'ios' ? 'Free on the App Store' : 'Free on Google Play'}
+          Free · Direct install
         </p>
       </div>
 

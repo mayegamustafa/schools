@@ -7,16 +7,16 @@ export default function PublicFooter() {
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 mb-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
             <div>
-              <h3 className="text-2xl font-semibold text-text-primary">Get updates on new school listings</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-text-primary">Get updates on new school listings</h3>
               <p className="text-sm text-text-secondary mt-1">No spam. Just useful admission windows and newly verified schools.</p>
             </div>
-            <div className="flex w-full md:w-auto gap-2.5">
+            <div className="flex flex-wrap w-full md:w-auto gap-2.5">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 md:w-72 px-4 py-2.5 text-sm bg-surface border border-border rounded-md text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
+                className="flex-1 min-w-[180px] md:w-72 px-4 py-2.5 text-sm bg-surface border border-border rounded-md text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
               />
-              <button className="px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary-dark transition-colors btn-press shrink-0">
+              <button className="w-full sm:w-auto px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary-dark transition-colors btn-press shrink-0">
                 Subscribe
               </button>
             </div>

@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  headers: async () => [
+    {
+      source: '/downloads/:path*',
+      headers: [
+        { key: 'Content-Type', value: 'application/vnd.android.package-archive' },
+        { key: 'Content-Disposition', value: 'attachment; filename="schoolfinder.apk"' },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;

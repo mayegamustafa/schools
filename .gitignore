@@ -45,6 +45,9 @@ students-working-laptop-school.jpg
 # user-uploaded media (should be on cloud storage in production)
 /public/uploads/
 
+# APK binary — build with EAS and place at public/downloads/schoolfinder.apk
+/public/downloads/*.apk
+
 # vercel
 .vercel
 

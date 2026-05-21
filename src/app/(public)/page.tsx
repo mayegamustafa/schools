@@ -101,7 +101,7 @@ export default function HomePage() {
                 <img
                   src={sc.hero.imageUrl}
                   alt={sc.hero.imageCaption || 'School hero image'}
-                  className="w-full h-[340px] sm:h-[420px] object-cover"
+                  className="w-full h-[200px] sm:h-[300px] lg:h-[420px] object-cover"
                 />
                 <div className="p-4 border-t border-border">
                   <p className="text-sm text-text-secondary">{sc.hero.imageCaption}</p>
@@ -116,7 +116,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex items-end justify-between mb-7">
           <div>
-            <h2 className="text-3xl text-text-primary">Browse by school type</h2>
+            <h2 className="text-2xl sm:text-3xl text-text-primary">Browse by school type</h2>
             <p className="text-text-secondary mt-1">Start with the level you are looking for.</p>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-7">
             <div>
-              <h2 className="text-3xl text-text-primary">Featured schools</h2>
+              <h2 className="text-2xl sm:text-3xl text-text-primary">Featured schools</h2>
               <p className="text-text-secondary mt-1">Verified schools selected for quality and consistency.</p>
             </div>
             <Link href="/schools?featured=true" className="hidden sm:inline-flex text-sm text-text-secondary hover:text-text-primary">
@@ -167,7 +167,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex items-end justify-between mb-7">
           <div>
-            <h2 className="text-3xl text-text-primary">Top rated this month</h2>
+            <h2 className="text-2xl sm:text-3xl text-text-primary">Top rated this month</h2>
             <p className="text-text-secondary mt-1">Based on recent parent reviews.</p>
           </div>
           <Link href="/schools?sort=rating" className="hidden sm:inline-flex text-sm text-text-secondary hover:text-text-primary">
@@ -186,7 +186,7 @@ export default function HomePage() {
       <section className="bg-surface border-y border-border py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-10">
-            <h2 className="text-3xl text-text-primary">{sc.howItWorks.title}</h2>
+            <h2 className="text-2xl sm:text-3xl text-text-primary">{sc.howItWorks.title}</h2>
             <p className="text-text-secondary mt-2">{sc.howItWorks.subtitle}</p>
           </div>
 
@@ -209,7 +209,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="rounded-2xl border border-border bg-primary text-white p-8 sm:p-10">
           <div className="max-w-2xl">
-            <h2 className="text-3xl">{sc.cta.title}</h2>
+            <h2 className="text-2xl sm:text-3xl">{sc.cta.title}</h2>
             <p className="text-white/80 mt-2 mb-6">{sc.cta.description}</p>
             <div className="flex flex-wrap gap-3">
               <Link href={sc.cta.primaryHref} className="px-4 py-2.5 rounded-md bg-white text-primary font-medium hover:bg-white/90 transition-colors">
