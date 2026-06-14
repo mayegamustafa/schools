@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
+import LocationAutocomplete from '@/components/schools/LocationAutocomplete';
 
 interface SelectOption {
   value: string;
@@ -26,7 +27,7 @@ const optionsFetcher = async (url: string) => {
 
 export default function RegisterSchoolPage() {
   const router = useRouter();
-  const { showToast, token } = useApp();
+  const { showToast, token, setUser, setToken } = useApp();
   const { data: optionsData } = useSWR('/api/schools/options', optionsFetcher, {
     revalidateOnFocus: false,
   });
@@ -101,11 +102,12 @@ export default function RegisterSchoolPage() {
           const data = await res.json();
           const addr = data.address || {};
 
+          // The user explicitly asked to detect — fill all three fields.
           setForm(prev => ({
             ...prev,
-            city: prev.city || addr.city || addr.town || addr.village || '',
-            region: prev.region || addr.state || addr.region || '',
-            address: prev.address || data.display_name || '',
+            address: data.display_name || prev.address,
+            city: addr.city || addr.town || addr.village || addr.municipality || addr.county || prev.city,
+            region: addr.state || addr.region || addr.state_district || prev.region,
           }));
           showToast('GPS location detected successfully', 'success');
         } catch {
@@ -143,6 +145,19 @@ export default function RegisterSchoolPage() {
         const signupData = await signupRes.json();
         if (!signupRes.ok) throw new Error(signupData.error || 'Failed to create account');
         authToken = signupData.token;
+
+        // Log the new school owner in immediately so the dashboard loads.
+        if (signupData.user) {
+          setUser({
+            id: signupData.user.id,
+            name: signupData.user.name,
+            email: signupData.user.email,
+            role: signupData.user.role,
+            favorites: signupData.user.favorites || [],
+            createdAt: new Date().toISOString(),
+          });
+        }
+        setToken(authToken || null);
       }
 
       const res = await fetch('/api/schools', {
@@ -205,14 +220,14 @@ export default function RegisterSchoolPage() {
         {[1, 2, 3].map(s => (
           <div key={s} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-              step >= s ? 'bg-primary text-white' : 'bg-gray-200 text-text-muted'
+              step >= s ? 'bg-primary text-white' : 'bg-border text-text-muted'
             }`}>{s}</div>
-            {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />}
+            {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-primary' : 'bg-border'}`} />}
           </div>
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-border p-8">
+      <form onSubmit={handleSubmit} className="bg-surface rounded-2xl border border-border p-8">
         {step === 1 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-text-primary mb-4">Basic Information</h2>
@@ -231,7 +246,7 @@ export default function RegisterSchoolPage() {
                   <label key={t.value} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
                     form.types.includes(t.value)
                       ? 'bg-primary/5 border-primary/30 text-primary'
-                      : 'border-border text-text-secondary hover:bg-gray-50'
+                      : 'border-border text-text-secondary hover:bg-hover'
                   }`}>
                     <input type="checkbox" checked={form.types.includes(t.value)} onChange={() => toggleType(t.value)} className="sr-only" />
                     <span className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center text-xs font-bold transition-colors ${
@@ -252,7 +267,7 @@ export default function RegisterSchoolPage() {
                   <div className="flex flex-wrap gap-2">
                     {(['o', 'oa'] as const).map(level => (
                       <label key={level} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
-                        form.secondaryLevel === level ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-gray-50'
+                        form.secondaryLevel === level ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-hover'
                       }`}>
                         <input type="radio" name="secondaryLevel" value={level}
                           checked={form.secondaryLevel === level}
@@ -268,7 +283,7 @@ export default function RegisterSchoolPage() {
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Category *</label>
                 <select required value={form.category} onChange={e => update('category', e.target.value)}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                   <option value="">{schoolCategories.length ? 'Select category' : 'No category options available'}</option>
                   {schoolCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
@@ -276,7 +291,7 @@ export default function RegisterSchoolPage() {
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Gender Mode *</label>
                 <select required value={form.gender} onChange={e => update('gender', e.target.value)}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                   <option value="">{schoolGenders.length ? 'Select gender mode' : 'No gender options available'}</option>
                   {schoolGenders.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
@@ -313,20 +328,20 @@ export default function RegisterSchoolPage() {
                   <label className="block text-sm font-medium text-text-primary mb-2">Your Full Name *</label>
                   <input type="text" value={form.accountName} onChange={e => update('accountName', e.target.value)}
                     placeholder="e.g. John Doe"
-                    className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                    className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-text-primary mb-2">Password *</label>
                     <input type="password" value={form.accountPassword} onChange={e => update('accountPassword', e.target.value)}
                       placeholder="Min 8 chars"
-                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-primary mb-2">Confirm Password *</label>
                     <input type="password" value={form.accountConfirm} onChange={e => update('accountConfirm', e.target.value)}
                       placeholder="Repeat password"
-                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                   </div>
                 </div>
                 <p className="text-xs text-text-muted">Password must be 8+ characters with uppercase, lowercase, and a number.</p>
@@ -363,17 +378,33 @@ export default function RegisterSchoolPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">Address *</label>
-              <input type="text" required value={form.address} onChange={e => update('address', e.target.value)}
-                placeholder="Street address"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+              <LocationAutocomplete
+                value={form.address}
+                onChange={v => update('address', v)}
+                onSelect={r => setForm(prev => ({
+                  ...prev,
+                  address: r.address,
+                  city: r.city || prev.city,
+                  region: r.region || prev.region,
+                  latitude: r.latitude || prev.latitude,
+                  longitude: r.longitude || prev.longitude,
+                }))}
+                placeholder="Start typing the school's location…"
+                required
+              />
+              <p className="text-xs text-text-muted mt-1.5">Type to search, or use GPS below — City &amp; Region fill in automatically.</p>
             </div>
-            <div className="rounded-xl border border-border p-3 bg-gray-50">
+            <div className="rounded-xl border border-border p-3 bg-hover">
               <button
                 type="button"
                 onClick={handleDetectLocation}
                 disabled={detectingGps}
-                className="w-full sm:w-auto px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-60"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-60"
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
                 {detectingGps ? 'Detecting location...' : 'Auto-detect GPS location'}
               </button>
               {(form.latitude && form.longitude) && (
@@ -398,7 +429,7 @@ export default function RegisterSchoolPage() {
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(1)}
-                className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
                 Back
               </button>
               <button type="button" onClick={() => {
@@ -439,7 +470,7 @@ export default function RegisterSchoolPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {facilities.map(f => (
                   <label key={f} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
-                    form.facilities.includes(f) ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-gray-50'
+                    form.facilities.includes(f) ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-hover'
                   }`}>
                     <input type="checkbox" checked={form.facilities.includes(f)} onChange={() => toggleFacility(f)} className="sr-only" />
                     <span className="text-sm">{f}</span>
@@ -452,7 +483,7 @@ export default function RegisterSchoolPage() {
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(2)}
-                className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
                 Back
               </button>
               <button type="submit" disabled={loading}

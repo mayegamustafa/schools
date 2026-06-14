@@ -75,7 +75,7 @@ export default function LoginPage() {
           <p className="text-text-secondary mt-2">Sign in to your SchoolFinder account</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-border p-8">
+        <div className="bg-surface rounded-2xl border border-border p-8">
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">Email address</label>
