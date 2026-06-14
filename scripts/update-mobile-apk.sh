@@ -29,6 +29,27 @@ npx expo prebuild --platform android --clean
 # 2. Pin Gradle to a compatible version (RN 0.85 needs >= 8.13)
 sed -i 's#gradle-[0-9.]*-bin.zip#gradle-8.13-bin.zip#' android/gradle/wrapper/gradle-wrapper.properties
 
+# 2b. Recreate expo-secure-store data rules referenced by the manifest
+#     (the config plugin references these xml files but doesn't always emit them)
+mkdir -p android/app/src/main/res/xml
+cat > android/app/src/main/res/xml/secure_store_backup_rules.xml <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+  <exclude domain="sharedpref" path="SecureStore" />
+</full-backup-content>
+XML
+cat > android/app/src/main/res/xml/secure_store_data_extraction_rules.xml <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+  <cloud-backup>
+    <exclude domain="sharedpref" path="SecureStore" />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="sharedpref" path="SecureStore" />
+  </device-transfer>
+</data-extraction-rules>
+XML
+
 # 3. Build the release APK
 cd android
 ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}" EXPO_PUBLIC_API_URL="$API_URL" ./gradlew assembleRelease
