@@ -380,19 +380,96 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/* Phone mockup */}
+              {/* Phone mockup — realistic in-app screen */}
               <div className="relative justify-self-center lg:justify-self-end">
-                <div className="relative w-56 h-[420px] rounded-[2.5rem] border-[6px] border-white/15 bg-primary-dark/60 backdrop-blur shadow-2xl animate-float overflow-hidden">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-white/15 rounded-b-2xl" />
-                  <div className="p-4 pt-9 space-y-3">
-                    <div className="h-9 rounded-xl bg-white/12" />
-                    <div className="h-24 rounded-xl bg-white/10" />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="h-20 rounded-xl bg-white/10" />
-                      <div className="h-20 rounded-xl bg-white/10" />
+                {/* glow */}
+                <div className="absolute -inset-6 bg-accent/20 blur-3xl rounded-full pointer-events-none" aria-hidden="true" />
+                <div className="relative w-[270px] h-[540px] rounded-[2.75rem] border-[7px] border-[#11161b] bg-[#11161b] shadow-2xl animate-float overflow-hidden">
+                  {/* notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#11161b] rounded-b-2xl z-20" />
+                  {/* screen */}
+                  <div className="absolute inset-0 rounded-[2.2rem] overflow-hidden bg-background">
+                    {/* status bar */}
+                    <div className="flex items-center justify-between px-5 pt-3 pb-1 text-[10px] font-semibold text-text-primary">
+                      <span>9:41</span>
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block w-3.5 h-2 rounded-[2px] bg-text-primary/80" />
+                        <span className="inline-block w-3 h-2.5 rounded-[2px] border border-text-primary/60" />
+                      </span>
                     </div>
-                    <div className="h-20 rounded-xl bg-white/10" />
-                    <div className="h-9 rounded-xl bg-accent/40" />
+
+                    {/* app header */}
+                    <div className="px-4 pt-2 pb-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-text-muted leading-none">Good morning 👋</p>
+                        <p className="text-[15px] font-bold text-text-primary leading-tight mt-0.5">School<span className="text-accent">Finder</span></p>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-light" />
+                    </div>
+
+                    {/* search pill */}
+                    <div className="px-4">
+                      <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5 shadow-sm">
+                        <svg className="w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span className="text-[11px] text-text-muted">Search schools near you…</span>
+                      </div>
+                    </div>
+
+                    {/* type chips */}
+                    <div className="px-4 mt-3 flex gap-1.5 overflow-hidden">
+                      {['Primary', 'Secondary', 'Day', 'Boarding'].map((c, i) => (
+                        <span key={c} className={`text-[9px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${i === 0 ? 'bg-primary text-white' : 'bg-surface border border-border text-text-secondary'}`}>{c}</span>
+                      ))}
+                    </div>
+
+                    {/* section label */}
+                    <div className="px-4 mt-4 flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-text-primary">Featured schools</span>
+                      <span className="text-[9px] text-accent font-semibold">See all</span>
+                    </div>
+
+                    {/* school cards */}
+                    <div className="px-4 mt-2 space-y-2.5">
+                      {[
+                        { name: 'Kampala Junior Academy', loc: 'Kampala · Central', rating: '4.8', grad: 'from-[#8b7355] to-[#69553e]' },
+                        { name: 'Greenhill Primary', loc: 'Wakiso · Central', rating: '4.6', grad: 'from-[#446c56] to-[#2d3640]' },
+                      ].map(s => (
+                        <div key={s.name} className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+                          <div className={`relative h-16 bg-gradient-to-br ${s.grad}`}>
+                            <span className="absolute top-1.5 left-1.5 text-[8px] font-semibold bg-white/90 text-primary px-1.5 py-0.5 rounded-full">✓ Verified</span>
+                            <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 text-[8px] font-semibold bg-surface/90 text-text-primary px-1.5 py-0.5 rounded-full">
+                              <svg className="w-2.5 h-2.5 text-accent" viewBox="0 0 20 20" fill="currentColor"><path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.29 3.96a1 1 0 00.95.69h4.16c.97 0 1.37 1.24.59 1.81l-3.37 2.45a1 1 0 00-.36 1.12l1.28 3.95c.3.92-.75 1.69-1.54 1.12l-3.36-2.45a1 1 0 00-1.18 0l-3.36 2.45c-.78.57-1.84-.2-1.54-1.12l1.29-3.95a1 1 0 00-.36-1.12L2.35 9.4c-.78-.57-.38-1.81.59-1.81h4.16a1 1 0 00.95-.69L9.05 2.93z" /></svg>
+                              {s.rating}
+                            </span>
+                          </div>
+                          <div className="p-2">
+                            <p className="text-[10px] font-bold text-text-primary leading-tight">{s.name}</p>
+                            <p className="text-[8px] text-text-muted mt-0.5">{s.loc}</p>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <span className="text-[9px] font-semibold text-text-primary">UGX 450k<span className="text-text-muted font-normal">/term</span></span>
+                              <span className="text-[8px] font-semibold text-white bg-primary px-2 py-0.5 rounded-md">View</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* bottom tab bar */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border flex items-center justify-around py-2.5">
+                      {[
+                        { d: 'M3 12l9-9 9 9M5 10v10h14V10', active: true },
+                        { d: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+                        { d: 'M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3-7 3V5z' },
+                        { d: 'M8 10h8M8 14h5M7 4h10a3 3 0 013 3v6a3 3 0 01-3 3h-4l-4 4v-4H7a3 3 0 01-3-3V7a3 3 0 013-3z' },
+                        { d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM4 20a6 6 0 0116 0' },
+                      ].map((ic, i) => (
+                        <svg key={i} className={`w-5 h-5 ${ic.active ? 'text-primary' : 'text-text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d={ic.d} />
+                        </svg>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
