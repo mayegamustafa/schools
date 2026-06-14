@@ -4,38 +4,47 @@ export default function PublicFooter() {
   return (
     <footer className="bg-surface border-t border-border mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        {/* Newsletter */}
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card to-hover p-7 sm:p-9 mb-12">
+          <div className="absolute -right-12 -top-12 w-52 h-52 rounded-full bg-accent/10 blur-3xl pointer-events-none" aria-hidden="true" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
             <div>
               <h3 className="text-xl sm:text-2xl font-semibold text-text-primary">Get updates on new school listings</h3>
-              <p className="text-sm text-text-secondary mt-1">No spam. Just useful admission windows and newly verified schools.</p>
+              <p className="text-sm text-text-secondary mt-1.5">No spam. Just useful admission windows and newly verified schools.</p>
             </div>
-            <div className="flex flex-wrap w-full md:w-auto gap-2.5">
+            <form className="flex flex-wrap w-full md:w-auto gap-2.5">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 min-w-[180px] md:w-72 px-4 py-2.5 text-sm bg-surface border border-border rounded-md text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
+                className="flex-1 min-w-[180px] md:w-72 px-4 py-3 text-sm bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted input-premium focus:outline-none"
               />
-              <button className="w-full sm:w-auto px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary-dark transition-colors btn-press shrink-0">
+              <button type="submit" className="w-full sm:w-auto px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors btn-press shrink-0">
                 Subscribe
               </button>
-            </div>
+            </form>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-8">
           <div>
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-text-primary tracking-tight">SchoolFinder</span>
+              <span className="text-lg font-semibold text-text-primary tracking-tight">School<span className="text-accent">Finder</span></span>
             </Link>
             <p className="text-sm text-text-secondary leading-relaxed max-w-sm">
               A practical platform for families to discover, compare, and connect with schools across Uganda.
             </p>
+            <a href="/api/app/download" className="inline-flex items-center gap-2 mt-5 text-sm font-medium text-primary hover:underline">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2a1 1 0 0 1 1 1v10.59l3.3-3.3a1 1 0 0 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V3a1 1 0 0 1 1-1Z"/>
+                <path d="M4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/>
+              </svg>
+              Get the Android app
+            </a>
           </div>
 
           <div>
