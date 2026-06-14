@@ -83,19 +83,21 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-24">
           <div className="grid lg:grid-cols-[1.08fr_0.92fr] gap-10 lg:gap-12 items-center">
             <div>
-              <Reveal as="div" className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary bg-surface/70 border border-border rounded-full pl-1.5 pr-3 py-1.5 mb-6 backdrop-blur">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-success/15">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot" />
-                </span>
-                {sc.hero.badge || 'Trusted by families choosing the right school'}
-              </Reveal>
+              {sc.hero.badge && (
+                <Reveal as="div" className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary bg-surface/70 border border-border rounded-full pl-1.5 pr-3 py-1.5 mb-6 backdrop-blur">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-success/15">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot" />
+                  </span>
+                  {sc.hero.badge}
+                </Reveal>
+              )}
 
-              <Reveal as="h1" delay={60} className="text-4xl sm:text-5xl lg:text-[3.75rem] leading-[1.05] text-text-primary mb-5">
+              <Reveal as="h1" delay={60} className="text-[2rem] leading-[1.12] sm:text-5xl sm:leading-[1.05] lg:text-[3.75rem] text-text-primary mb-4 sm:mb-5 text-balance">
                 {sc.hero.title.split(' ').slice(0, -1).join(' ')}{' '}
                 <span className="text-gradient">{sc.hero.title.split(' ').slice(-1)}</span>
               </Reveal>
 
-              <Reveal as="p" delay={120} className="text-base sm:text-lg text-text-secondary max-w-2xl leading-relaxed mb-8">
+              <Reveal as="p" delay={120} className="text-[15px] sm:text-lg text-text-secondary max-w-xl sm:max-w-2xl leading-relaxed mb-7 sm:mb-8">
                 {sc.hero.description}
               </Reveal>
 
