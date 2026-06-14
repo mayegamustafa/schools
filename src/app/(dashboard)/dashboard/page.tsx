@@ -82,8 +82,15 @@ export default function DashboardOverviewPage() {
 
   if (isLoading && !data) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center text-text-secondary">
-        Loading school dashboard...
+      <div className="max-w-7xl mx-auto">
+        <div className="skeleton h-9 w-64 mb-8 rounded-lg" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          {[0, 1, 2].map(i => <div key={i} className="skeleton h-32 rounded-2xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="skeleton h-64 rounded-2xl" />
+          <div className="skeleton h-64 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -122,42 +129,46 @@ export default function DashboardOverviewPage() {
     <div className="max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">School Dashboard</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Welcome back 👋</h1>
           <p className="text-text-secondary mt-1">Live listing performance and account status.</p>
         </div>
         <Link
           href={`/schools/${data.school.id}`}
-          className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-gray-50 transition-colors self-start"
+          className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-hover hover:border-primary/40 transition-all self-start"
         >
           View Public Profile
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         {statCards.map(stat => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-border p-6">
+          <div key={stat.label} className="group bg-surface rounded-2xl border border-border p-6 lift">
             <div className="flex items-center justify-between mb-4">
-              <span>{stat.icon}</span>
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${stat.trend >= 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
+              <span className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center group-hover:bg-primary/15 transition-colors">{stat.icon}</span>
+              <span className={`inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-1 rounded-full ${stat.trend >= 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
+                <svg className={`w-3 h-3 ${stat.trend >= 0 ? '' : 'rotate-180'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
                 {stat.trend >= 0 ? '+' : ''}{stat.trend}%
               </span>
             </div>
-            <p className="text-2xl font-bold text-text-primary">{formatNumber(stat.value)}</p>
+            <p className="text-3xl font-bold text-text-primary tracking-tight">{formatNumber(stat.value)}</p>
             <p className="text-sm text-text-muted mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-border p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-surface rounded-2xl border border-border p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Recent Activity</h2>
           {data.recentActivity.length === 0 ? (
             <p className="text-sm text-text-secondary">No recent activity yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {data.recentActivity.map((activity, idx) => (
-                <div key={`${activity.type}-${idx}`} className="flex items-start justify-between gap-3 py-2 border-b border-border last:border-0">
-                  <p className="text-sm text-text-primary">{activity.message}</p>
+                <div key={`${activity.type}-${idx}`} className="flex items-start gap-3 py-2.5 border-b border-border last:border-0">
+                  <span className="w-2 h-2 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+                  <p className="text-sm text-text-primary flex-1">{activity.message}</p>
                   <span className="text-xs text-text-muted shrink-0">{activity.time}</span>
                 </div>
               ))}
@@ -165,7 +176,7 @@ export default function DashboardOverviewPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-border p-6">
+        <div className="bg-surface rounded-2xl border border-border p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Subscription Snapshot</h2>
           {data.subscription ? (
             <>

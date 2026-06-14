@@ -87,7 +87,7 @@ export default function DashboardMessagesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
-        <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           {data.conversations.length === 0 ? (
             <p className="p-5 text-sm text-text-secondary">No conversations yet.</p>
           ) : data.conversations.map(conversation => (
@@ -95,21 +95,21 @@ export default function DashboardMessagesPage() {
               key={conversation.id}
               type="button"
               onClick={() => setActiveConversationId(conversation.id)}
-              className={`w-full text-left px-5 py-4 border-b border-border last:border-b-0 transition-colors ${conversation.id === activeConversationId ? 'bg-primary/5' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-5 py-4 border-b border-border last:border-b-0 transition-colors ${conversation.id === activeConversationId ? 'bg-primary/5' : 'hover:bg-hover'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-text-primary">{conversation.userName}</p>
                   <p className="text-xs text-text-secondary mt-1">{conversation.subject}</p>
                 </div>
-                <span className={`text-[11px] px-2 py-1 rounded-full ${conversation.status === 'open' ? 'bg-secondary/10 text-secondary' : 'bg-gray-100 text-text-secondary'}`}>{conversation.status}</span>
+                <span className={`text-[11px] px-2 py-1 rounded-full ${conversation.status === 'open' ? 'bg-secondary/10 text-secondary' : 'bg-hover text-text-secondary'}`}>{conversation.status}</span>
               </div>
               {conversation.lastMessage && <p className="text-xs text-text-muted mt-2 line-clamp-2">{conversation.lastMessage.content}</p>}
             </button>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl border border-border p-5 min-h-[520px] flex flex-col">
+        <div className="bg-surface rounded-2xl border border-border p-5 min-h-[520px] flex flex-col">
           {!thread ? (
             <div className="flex-1 flex items-center justify-center text-sm text-text-secondary">Select a conversation to view the thread.</div>
           ) : (
@@ -120,13 +120,13 @@ export default function DashboardMessagesPage() {
                   <p className="text-sm text-text-secondary">With {thread.userName}</p>
                 </div>
                 {thread.status === 'open' && (
-                  <button type="button" onClick={closeConversation} className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-gray-50 transition-colors">Close thread</button>
+                  <button type="button" onClick={closeConversation} className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-hover transition-colors">Close thread</button>
                 )}
               </div>
 
               <div className="flex-1 py-4 space-y-3 overflow-y-auto">
                 {(thread.messages || []).map(message => (
-                  <div key={message.id} className={`max-w-xl rounded-2xl px-4 py-3 ${message.senderRole === 'school' ? 'ml-auto bg-primary text-white' : 'bg-gray-100 text-text-primary'}`}>
+                  <div key={message.id} className={`max-w-xl rounded-2xl px-4 py-3 ${message.senderRole === 'school' ? 'ml-auto bg-primary text-white' : 'bg-hover text-text-primary'}`}>
                     <p className="text-xs font-medium mb-1 opacity-80">{message.senderName}</p>
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   </div>
@@ -140,7 +140,7 @@ export default function DashboardMessagesPage() {
                   onChange={event => setDraft(event.target.value)}
                   placeholder={thread.status === 'closed' ? 'This conversation is closed.' : 'Reply to this conversation...'}
                   disabled={thread.status === 'closed'}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm resize-none disabled:bg-gray-50"
+                  className="w-full px-4 py-3 border border-border rounded-xl text-sm resize-none disabled:bg-hover"
                 />
                 <div className="flex justify-end mt-3">
                   <button type="button" onClick={sendMessage} disabled={thread.status === 'closed' || !draft.trim()} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors">Send reply</button>

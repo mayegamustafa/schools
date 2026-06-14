@@ -294,27 +294,27 @@ export default function DashboardProfilePage() {
       <p className="text-text-secondary mb-6">Update your public listing information.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-[160px,1fr] gap-5 mb-6">
-        <div className="bg-white rounded-2xl border border-border p-4">
+        <div className="bg-surface rounded-2xl border border-border p-4">
           <p className="text-xs font-medium text-text-secondary mb-3">School Badge</p>
-          <div className="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-gray-50">
+          <div className="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-hover">
             <Image src={previewLogo} alt="School badge preview" fill className="object-cover" sizes="96px" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-border p-4">
+        <div className="bg-surface rounded-2xl border border-border p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <p className="text-xs font-medium text-text-secondary">Cover Preview</p>
             {form.logo && (
               <span className="text-xs text-success">Badge ready</span>
             )}
           </div>
-          <div className="relative h-36 rounded-2xl overflow-hidden border border-border bg-gray-50">
+          <div className="relative h-36 rounded-2xl overflow-hidden border border-border bg-hover">
             <Image src={previewCover} alt="Cover image preview" fill className="object-cover" sizes="(max-width: 768px) 100vw, 600px" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border p-6 space-y-5">
+      <div className="bg-surface rounded-2xl border border-border p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-2">School Name</label>
           <input
@@ -394,7 +394,7 @@ export default function DashboardProfilePage() {
             onChange={e => setForm(prev => ({ ...prev, logo: e.target.value }))}
             className="w-full px-4 py-3 border border-border rounded-xl text-sm"
           />
-          <label className="inline-flex items-center mt-3 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-gray-50 transition-colors cursor-pointer">
+          <label className="inline-flex items-center mt-3 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-hover transition-colors cursor-pointer">
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -418,7 +418,7 @@ export default function DashboardProfilePage() {
             onChange={e => setForm(prev => ({ ...prev, coverImage: e.target.value }))}
             className="w-full px-4 py-3 border border-border rounded-xl text-sm"
           />
-          <label className="inline-flex items-center mt-3 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-gray-50 transition-colors cursor-pointer">
+          <label className="inline-flex items-center mt-3 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-hover transition-colors cursor-pointer">
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -439,7 +439,7 @@ export default function DashboardProfilePage() {
               <h2 className="text-sm font-medium text-text-primary">Gallery Images</h2>
               <p className="text-xs text-text-secondary mt-1">Upload multiple images for your public gallery.</p>
             </div>
-            <label className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-gray-50 transition-colors cursor-pointer">
+            <label className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-hover transition-colors cursor-pointer">
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -457,8 +457,8 @@ export default function DashboardProfilePage() {
             {form.gallery.length === 0 ? (
               <p className="text-sm text-text-secondary">No gallery images yet.</p>
             ) : form.gallery.map((imageUrl, index) => (
-              <div key={`${imageUrl}-${index}`} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-border p-3 bg-gray-50">
-                <div className="relative w-full sm:w-28 h-24 rounded-xl overflow-hidden border border-border bg-white shrink-0">
+              <div key={`${imageUrl}-${index}`} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-border p-3 bg-hover">
+                <div className="relative w-full sm:w-28 h-24 rounded-xl overflow-hidden border border-border bg-surface shrink-0">
                   <Image src={previewGallery[index] || previewCover} alt={`Gallery preview ${index + 1}`} fill className="object-cover" sizes="112px" />
                 </div>
                 <input
@@ -467,7 +467,7 @@ export default function DashboardProfilePage() {
                   onChange={event => updateGalleryItem(index, event.target.value)}
                   className="flex-1 px-4 py-3 border border-border rounded-xl text-sm"
                 />
-                <button type="button" onClick={() => removeGalleryItem(index)} className="px-3 py-2 text-sm text-error border border-border rounded-lg hover:bg-gray-50 transition-colors">Remove</button>
+                <button type="button" onClick={() => removeGalleryItem(index)} className="px-3 py-2 text-sm text-error border border-border rounded-lg hover:bg-hover transition-colors">Remove</button>
               </div>
             ))}
           </div>
@@ -479,7 +479,7 @@ export default function DashboardProfilePage() {
               <h2 className="text-sm font-medium text-text-primary">School Videos</h2>
               <p className="text-xs text-text-secondary mt-1">Upload videos or paste hosted video URLs.</p>
             </div>
-            <label className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-gray-50 transition-colors cursor-pointer">
+            <label className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-hover transition-colors cursor-pointer">
               <input
                 type="file"
                 accept="video/mp4,video/webm,video/quicktime"
@@ -497,7 +497,7 @@ export default function DashboardProfilePage() {
             {form.videos.length === 0 ? (
               <p className="text-sm text-text-secondary">No videos yet.</p>
             ) : form.videos.map((videoUrl, index) => (
-              <div key={`${videoUrl}-${index}`} className="flex flex-col gap-3 rounded-2xl border border-border p-3 bg-gray-50">
+              <div key={`${videoUrl}-${index}`} className="flex flex-col gap-3 rounded-2xl border border-border p-3 bg-hover">
                 <video
                   src={previewVideos[index] || undefined}
                   controls
@@ -511,7 +511,7 @@ export default function DashboardProfilePage() {
                   onChange={event => updateVideoItem(index, event.target.value)}
                   className="flex-1 px-4 py-3 border border-border rounded-xl text-sm"
                 />
-                <button type="button" onClick={() => removeVideoItem(index)} className="px-3 py-2 text-sm text-error border border-border rounded-lg hover:bg-gray-50 transition-colors">Remove</button>
+                <button type="button" onClick={() => removeVideoItem(index)} className="px-3 py-2 text-sm text-error border border-border rounded-lg hover:bg-hover transition-colors">Remove</button>
                 </div>
               </div>
             ))}
@@ -548,7 +548,7 @@ export default function DashboardProfilePage() {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-border p-5 bg-gray-50">
+        <div className="space-y-4 rounded-2xl border border-border p-5 bg-hover">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="text-sm font-medium text-text-primary">GPS Location</h2>
@@ -572,7 +572,7 @@ export default function DashboardProfilePage() {
                 step="0.000001"
                 value={form.latitude}
                 onChange={e => setForm(prev => ({ ...prev, latitude: e.target.value }))}
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white"
+                className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface"
               />
             </div>
             <div>
@@ -582,7 +582,7 @@ export default function DashboardProfilePage() {
                 step="0.000001"
                 value={form.longitude}
                 onChange={e => setForm(prev => ({ ...prev, longitude: e.target.value }))}
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white"
+                className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface"
               />
             </div>
           </div>

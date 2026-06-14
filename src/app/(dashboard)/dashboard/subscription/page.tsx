@@ -115,7 +115,7 @@ export default function DashboardSubscriptionPage() {
         <p className="text-text-secondary mt-1">Manage your plan and payment history.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Current Plan</h2>
         {currentSubscription ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -145,7 +145,7 @@ export default function DashboardSubscriptionPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(plans.data?.plans || []).map(plan => {
@@ -168,7 +168,7 @@ export default function DashboardSubscriptionPage() {
                   type="button"
                   disabled={isCurrent || updatingPlanId === plan.id}
                   onClick={() => activatePlan(plan.id)}
-                  className={`w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isCurrent ? 'bg-gray-100 text-text-muted cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark'}`}
+                  className={`w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isCurrent ? 'bg-hover text-text-muted cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark'}`}
                 >
                   {isCurrent ? 'Current Plan' : updatingPlanId === plan.id ? 'Updating...' : 'Choose Plan'}
                 </button>
@@ -178,7 +178,7 @@ export default function DashboardSubscriptionPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Payment History</h2>
         {(payments.data?.payments || []).length === 0 ? (
           <p className="text-sm text-text-secondary">No payment records yet.</p>

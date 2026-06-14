@@ -92,7 +92,7 @@ export default function DashboardLeadsPage() {
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value as 'all' | LeadRecord['status'])}
-          className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+          className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
         >
           <option value="all">All statuses</option>
           {statusOptions.map(option => (
@@ -101,11 +101,11 @@ export default function DashboardLeadsPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-hover text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Contact</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Message</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
@@ -120,7 +120,7 @@ export default function DashboardLeadsPage() {
                   </td>
                 </tr>
               ) : data.leads.map(lead => (
-                <tr key={lead.id} className="hover:bg-gray-50">
+                <tr key={lead.id} className="hover:bg-hover">
                   <td className="px-4 py-4 align-top">
                     <p className="text-sm font-medium text-text-primary">{lead.name}</p>
                     <p className="text-xs text-text-secondary">{lead.email}</p>
@@ -133,7 +133,7 @@ export default function DashboardLeadsPage() {
                     <select
                       value={lead.status}
                       onChange={e => updateStatus(lead.id, e.target.value as LeadRecord['status'])}
-                      className="px-3 py-2 text-xs border border-border rounded-lg bg-white"
+                      className="px-3 py-2 text-xs border border-border rounded-lg bg-surface"
                     >
                       {statusOptions.map(option => (
                         <option key={option} value={option}>{option}</option>

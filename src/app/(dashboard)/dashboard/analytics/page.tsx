@@ -57,21 +57,21 @@ export default function DashboardAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-sm text-text-secondary">Total Views</p>
           <p className="text-2xl font-bold text-text-primary mt-1">{data.stats.totalViews}</p>
           <p className={`text-xs mt-1 ${data.stats.viewsTrend >= 0 ? 'text-secondary' : 'text-error'}`}>
             {data.stats.viewsTrend >= 0 ? '+' : ''}{data.stats.viewsTrend}% vs previous period
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-sm text-text-secondary">Link Clicks</p>
           <p className="text-2xl font-bold text-text-primary mt-1">{data.stats.totalClicks}</p>
           <p className={`text-xs mt-1 ${data.stats.clicksTrend >= 0 ? 'text-secondary' : 'text-error'}`}>
             {data.stats.clicksTrend >= 0 ? '+' : ''}{data.stats.clicksTrend}% vs previous period
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-sm text-text-secondary">Leads</p>
           <p className="text-2xl font-bold text-text-primary mt-1">{data.stats.totalMessages}</p>
           <p className={`text-xs mt-1 ${data.stats.messagesTrend >= 0 ? 'text-secondary' : 'text-error'}`}>
@@ -81,7 +81,7 @@ export default function DashboardAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-border p-6">
+        <div className="bg-surface rounded-2xl border border-border p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Top Search Terms</h2>
           {data.analytics.topSearchTerms.length === 0 ? (
             <p className="text-sm text-text-secondary">No search term data yet.</p>
@@ -93,7 +93,7 @@ export default function DashboardAnalyticsPage() {
                     <span className="text-text-primary">{term.term}</span>
                     <span className="text-text-secondary">{term.views} views</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-hover rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary"
                       style={{ width: `${Math.min(100, Math.max(5, Math.round((term.views / Math.max(data.stats.totalViews, 1)) * 100)))}%` }}
@@ -105,7 +105,7 @@ export default function DashboardAnalyticsPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-border p-6">
+        <div className="bg-surface rounded-2xl border border-border p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Visitor Sources</h2>
           <DonutChart
             size={180}
