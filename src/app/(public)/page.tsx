@@ -17,6 +17,7 @@ import {
 export default function HomePage() {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
   const sc = useSiteContent();
 
   useEffect(() => {
@@ -25,6 +26,11 @@ export default function HomePage() {
       .then(data => setSchools(data.schools || []))
       .catch(() => setSchools([]))
       .finally(() => setLoading(false));
+
+    fetch('/downloads/version.json', { cache: 'no-store' })
+      .then(res => (res.ok ? res.json() : null))
+      .then(v => v?.version && setAppVersion(v.version))
+      .catch(() => {});
   }, []);
 
   const featuredSchools = schools.filter(s => s.isFeatured).slice(0, 6);
@@ -367,6 +373,9 @@ export default function HomePage() {
                     Browse on web instead →
                   </Link>
                 </div>
+                <p className="text-xs text-white/55 mt-4">
+                  Direct APK install · No Play Store needed{appVersion ? ` · v${appVersion}` : ''}
+                </p>
               </div>
 
               {/* Phone mockup */}
