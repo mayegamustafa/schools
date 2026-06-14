@@ -135,7 +135,7 @@ export default function AdminPlansPage() {
         <select
           value={status}
           onChange={event => setStatus(event.target.value as 'all' | 'active' | 'inactive')}
-          className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+          className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
         >
           <option value="all">All plans</option>
           <option value="active">Active only</option>
@@ -143,7 +143,7 @@ export default function AdminPlansPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+      <div className="bg-surface rounded-2xl border border-border p-6 space-y-4">
         <h2 className="text-lg font-semibold text-text-primary">Create Plan</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -181,7 +181,7 @@ export default function AdminPlansPage() {
             <select
               value={form.period}
               onChange={event => setForm(prev => ({ ...prev, period: event.target.value }))}
-              className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-white"
+              className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface"
             >
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
@@ -237,7 +237,7 @@ export default function AdminPlansPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Plans</h2>
           <p className="text-sm text-text-secondary">{data.plans.length} total</p>
@@ -245,7 +245,7 @@ export default function AdminPlansPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-hover text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Plan</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Price</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Period</th>
@@ -260,7 +260,7 @@ export default function AdminPlansPage() {
                   <td colSpan={6} className="px-4 py-8 text-sm text-text-secondary text-center">No plans created yet.</td>
                 </tr>
               ) : data.plans.map(plan => (
-                <tr key={plan.id} className="hover:bg-gray-50">
+                <tr key={plan.id} className="hover:bg-hover">
                   <td className="px-4 py-4">
                     <p className="text-sm font-medium text-text-primary">{plan.name}</p>
                     <p className="text-xs text-text-secondary">{plan.features.length} features · Sort {plan.sortOrder}</p>
@@ -268,12 +268,12 @@ export default function AdminPlansPage() {
                   <td className="px-4 py-4 text-sm text-text-secondary">{formatCurrency(plan.price, plan.currency)}</td>
                   <td className="px-4 py-4 text-sm text-text-secondary capitalize">{plan.period}</td>
                   <td className="px-4 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isActive ? 'bg-success/10 text-success' : 'bg-gray-100 text-text-secondary'}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isActive ? 'bg-success/10 text-success' : 'bg-hover text-text-secondary'}`}>
                       {plan.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isFeatured ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-text-secondary'}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isFeatured ? 'bg-primary/10 text-primary' : 'bg-hover text-text-secondary'}`}>
                       {plan.isFeatured ? 'Featured' : 'Standard'}
                     </span>
                   </td>

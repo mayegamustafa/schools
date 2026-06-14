@@ -61,7 +61,7 @@ function OptionSection({
   );
 }
 
-const inputCls = 'w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white text-text-primary';
+const inputCls = 'w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface text-text-primary';
 
 function ImageUploadField({
   label, value, onChange, placeholder, token,
@@ -146,7 +146,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function ContentCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+    <div className="bg-surface rounded-2xl border border-border p-6 space-y-4">
       <h2 className="text-base font-semibold text-text-primary border-b border-border pb-2">{title}</h2>
       {children}
     </div>
@@ -330,7 +330,7 @@ export default function AdminSettingsPage() {
 
       {/* ── School Options tab ── */}
       {activeTab === 'options' && (
-        <div className="bg-white rounded-2xl border border-border p-6 space-y-6">
+        <div className="bg-surface rounded-2xl border border-border p-6 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text-primary">School Options</h2>
             <button type="button" onClick={saveOptions} disabled={saving === 'options'}
@@ -380,7 +380,7 @@ export default function AdminSettingsPage() {
 
       {/* ── Brand Colors tab ── */}
       {activeTab === 'brand' && (
-        <div className="bg-white rounded-2xl border border-border p-6 space-y-6">
+        <div className="bg-surface rounded-2xl border border-border p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-text-primary">Brand Colors</h2>

@@ -121,7 +121,7 @@ export default function AdminReportsPage() {
           <select
             value={status}
             onChange={e => setStatus(e.target.value as TicketStatus | 'all')}
-            className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
           >
             <option value="all">All statuses</option>
             <option value="open">Open</option>
@@ -132,7 +132,7 @@ export default function AdminReportsPage() {
           <select
             value={priority}
             onChange={e => setPriority(e.target.value as TicketPriority | 'all')}
-            className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
           >
             <option value="all">All priorities</option>
             <option value="low">Low</option>
@@ -144,25 +144,25 @@ export default function AdminReportsPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-xs text-text-muted uppercase tracking-wider">Open Tickets</p>
           <p className="text-2xl font-bold text-text-primary mt-2">{ticketsData.summary.openCount}</p>
         </div>
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-xs text-text-muted uppercase tracking-wider">Resolved Tickets</p>
           <p className="text-2xl font-bold text-text-primary mt-2">{ticketsData.summary.resolvedCount}</p>
         </div>
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-xs text-text-muted uppercase tracking-wider">Urgent Tickets</p>
           <p className="text-2xl font-bold text-text-primary mt-2">{ticketsData.summary.urgentCount}</p>
         </div>
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-surface rounded-2xl border border-border p-5">
           <p className="text-xs text-text-muted uppercase tracking-wider">Audit Logs</p>
           <p className="text-2xl font-bold text-text-primary mt-2">{logsData.total}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Support Tickets</h2>
           <p className="text-sm text-text-secondary">{ticketsData.total} records</p>
@@ -170,7 +170,7 @@ export default function AdminReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-hover text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Submitter</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Subject</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
@@ -184,7 +184,7 @@ export default function AdminReportsPage() {
                   <td colSpan={5} className="px-4 py-8 text-sm text-text-secondary text-center">No tickets found.</td>
                 </tr>
               ) : ticketsData.tickets.map(ticket => (
-                <tr key={ticket.id} className="hover:bg-gray-50">
+                <tr key={ticket.id} className="hover:bg-hover">
                   <td className="px-4 py-4">
                     <p className="text-sm font-medium text-text-primary">{ticket.submitterName}</p>
                     <p className="text-xs text-text-secondary">{ticket.submitterEmail}</p>
@@ -194,7 +194,7 @@ export default function AdminReportsPage() {
                     <select
                       value={ticket.status}
                       onChange={e => updateTicket(ticket.id, { status: e.target.value as TicketStatus })}
-                      className="px-2 py-1 text-sm border border-border rounded-lg bg-white"
+                      className="px-2 py-1 text-sm border border-border rounded-lg bg-surface"
                     >
                       <option value="open">Open</option>
                       <option value="in_progress">In progress</option>
@@ -206,7 +206,7 @@ export default function AdminReportsPage() {
                     <select
                       value={ticket.priority}
                       onChange={e => updateTicket(ticket.id, { priority: e.target.value as TicketPriority })}
-                      className="px-2 py-1 text-sm border border-border rounded-lg bg-white"
+                      className="px-2 py-1 text-sm border border-border rounded-lg bg-surface"
                     >
                       <option value="low">Low</option>
                       <option value="normal">Normal</option>
@@ -222,7 +222,7 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Recent Audit Logs</h2>
           <p className="text-sm text-text-secondary">{logsData.total} records</p>

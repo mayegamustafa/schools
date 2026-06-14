@@ -113,7 +113,7 @@ export default function AdminAuditPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {isLoading && !data ? (
           <div className="p-8 text-center text-text-secondary text-sm">Loading audit logs…</div>
         ) : error ? (

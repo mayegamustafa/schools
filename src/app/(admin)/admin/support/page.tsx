@@ -107,7 +107,7 @@ export default function AdminSupportPage() {
             { label: 'Resolved', value: data.summary.resolvedCount, color: 'text-success' },
             { label: 'Urgent', value: data.summary.urgentCount, color: 'text-error' },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-xl border border-border p-4">
+            <div key={s.label} className="bg-surface rounded-xl border border-border p-4">
               <p className="text-xs text-text-muted uppercase tracking-wider">{s.label}</p>
               <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
             </div>
@@ -142,7 +142,7 @@ export default function AdminSupportPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {isLoading && !data ? (
           <div className="p-8 text-center text-text-secondary text-sm">Loading tickets…</div>
         ) : error ? (
@@ -207,7 +207,7 @@ export default function AdminSupportPage() {
       {/* Ticket modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl border border-border w-full max-w-lg shadow-2xl">
+          <div className="bg-surface rounded-2xl border border-border w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="font-semibold text-text-primary">Ticket Details</h2>
               <button onClick={() => setSelected(null)} className="text-text-muted hover:text-text-primary text-xl leading-none">&times;</button>

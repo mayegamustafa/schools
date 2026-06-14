@@ -150,7 +150,7 @@ export default function AdminUsersPage() {
           <select
             value={role}
             onChange={e => setRole(e.target.value as UserRole | 'all')}
-            className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
           >
             <option value="all">All roles</option>
             <option value="user">User</option>
@@ -160,7 +160,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">User Accounts</h2>
           <p className="text-sm text-text-secondary">{data.total} records</p>
@@ -169,7 +169,7 @@ export default function AdminUsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-hover text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Name</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Email</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Role</th>
@@ -186,7 +186,7 @@ export default function AdminUsersPage() {
                 const isCurrentUser = user?.id === account.id;
 
                 return (
-                  <tr key={account.id} className="hover:bg-gray-50">
+                  <tr key={account.id} className="hover:bg-hover">
                     <td className="px-4 py-4">
                       <p className="text-sm font-medium text-text-primary">{account.name}</p>
                     </td>
@@ -195,7 +195,7 @@ export default function AdminUsersPage() {
                       <select
                         value={account.role}
                         onChange={e => updateRole(account.id, e.target.value as UserRole)}
-                        className="px-2 py-1 text-sm border border-border rounded-lg bg-white"
+                        className="px-2 py-1 text-sm border border-border rounded-lg bg-surface"
                         disabled={isCurrentUser}
                       >
                         <option value="user">User</option>
@@ -233,7 +233,7 @@ export default function AdminUsersPage() {
 
       {pwModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <h2 className="text-lg font-semibold text-text-primary">Set password for <span className="text-primary">{pwModal.name}</span></h2>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">New Password</label>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
             <p className="text-xs text-text-muted">Must be 8+ characters with uppercase, lowercase, and a number.</p>
             <div className="flex gap-3 pt-1">
               <button onClick={() => { setPwModal(null); setNewPw(''); setConfirmPw(''); }}
-                className="flex-1 py-2.5 border border-border text-text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                className="flex-1 py-2.5 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
                 Cancel
               </button>
               <button onClick={setPassword}

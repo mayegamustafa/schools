@@ -53,8 +53,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform md:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-14 px-4 flex items-center border-b border-border">
-          <Link href="/" className="font-semibold text-text-primary hover:text-primary transition-colors">
-            SchoolFinder Admin
+          <Link href="/" className="flex items-center gap-2.5 font-semibold text-text-primary group">
+            <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark shadow-sm transition-transform group-hover:scale-105">
+              <svg className="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </span>
+            <span className="text-sm">School<span className="text-accent">Finder</span> <span className="text-text-muted font-normal">Admin</span></span>
           </Link>
         </div>
 
@@ -68,8 +73,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-hover hover:text-text-primary'}`}
+                className={`relative block px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-hover hover:text-text-primary'}`}
               >
+                {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary" />}
                 {item.label}
               </Link>
             );
@@ -80,7 +86,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full px-3 py-2 rounded-lg text-sm font-medium border border-border text-text-secondary hover:text-error hover:bg-hover transition-colors"
+            className="w-full px-3 py-2 rounded-xl text-sm font-medium border border-border text-text-secondary hover:text-error hover:bg-hover transition-colors"
           >
             Sign out
           </button>
@@ -88,7 +94,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       </aside>
 
       <div className="flex-1 min-h-screen flex flex-col md:ml-0">
-        <header className="h-14 bg-surface border-b border-border flex items-center justify-between px-4">
+        <header className="sticky top-0 z-30 h-14 glass-nav flex items-center justify-between px-4">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -100,7 +106,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </svg>
           </button>
           <p className="text-sm font-medium text-text-primary">Admin Dashboard</p>
-          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-light text-white text-xs font-semibold flex items-center justify-center shadow-sm">
             {user?.name?.[0]?.toUpperCase() || 'A'}
           </div>
         </header>

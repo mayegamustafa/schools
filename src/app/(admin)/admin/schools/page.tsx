@@ -95,7 +95,7 @@ export default function AdminSchoolsPage() {
           <select
             value={status}
             onChange={e => setStatus(e.target.value as SchoolStatus | 'all')}
-            className="px-3 py-2 text-sm border border-border rounded-lg bg-white"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-surface"
           >
             <option value="all">All statuses</option>
             <option value="pending">Pending</option>
@@ -106,11 +106,11 @@ export default function AdminSchoolsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-hover text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">School</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Type</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Rating</th>
@@ -127,7 +127,7 @@ export default function AdminSchoolsPage() {
                   </td>
                 </tr>
               ) : data.schools.map(school => (
-                <tr key={school.id} className="hover:bg-gray-50">
+                <tr key={school.id} className="hover:bg-hover">
                   <td className="px-4 py-4">
                     <p className="text-sm font-medium text-text-primary">{school.name}</p>
                     <p className="text-xs text-text-secondary">{school.city}</p>
