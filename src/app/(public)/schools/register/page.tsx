@@ -1,10 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
 import LocationAutocomplete from '@/components/schools/LocationAutocomplete';
+import ImageUploadField from '@/components/schools/ImageUploadField';
+import PasswordField, { PasswordChecklist, passwordProblem } from '@/components/ui/PasswordField';
+import {
+  DEFAULT_CATEGORY_OPTIONS,
+  DEFAULT_FACILITIES,
+  DEFAULT_GENDER_OPTIONS,
+  SELECTABLE_SCHOOL_TYPES,
+} from '@/lib/taxonomy';
+import { getSchoolTypeLabel } from '@/utils/helpers';
 
 interface SelectOption {
   value: string;
@@ -27,13 +37,15 @@ const optionsFetcher = async (url: string) => {
 
 export default function RegisterSchoolPage() {
   const router = useRouter();
-  const { showToast, token, setUser, setToken } = useApp();
+  const { showToast, token, user, setUser, setToken } = useApp();
   const { data: optionsData } = useSWR('/api/schools/options', optionsFetcher, {
     revalidateOnFocus: false,
   });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touchedPassword, setTouchedPassword] = useState(false);
   const [form, setForm] = useState({
     name: '', types: [] as string[], secondaryLevel: 'oa' as 'o' | 'oa',
     category: '', gender: 'mixed', description: '',
@@ -41,25 +53,144 @@ export default function RegisterSchoolPage() {
     accountName: '', accountPassword: '', accountConfirm: '',
     address: '', city: '', region: '', country: 'Uganda',
     latitude: '', longitude: '',
+    logo: '', coverImage: '', gallery: [] as string[],
     feesDayMin: '', feesDayMax: '',
     facilities: [] as string[],
   });
 
-  const schoolTypes: SelectOption[] = [
-    { value: 'daycare', label: 'Daycare' },
-    { value: 'kindergarten', label: 'Kindergarten' },
-    { value: 'primary', label: 'Primary School' },
-    { value: 'secondary', label: 'Secondary School' },
-    { value: 'tertiary', label: 'Tertiary Institution' },
-    { value: 'university', label: 'University' },
-  ];
+  const TOTAL_STEPS = 4;
+
+  const schoolTypes: SelectOption[] = SELECTABLE_SCHOOL_TYPES.map(value => ({
+    value,
+    label: getSchoolTypeLabel(value),
+  }));
   const schoolCategories = optionsData?.categories || [];
   const schoolGenders = optionsData?.genders || [];
   const facilities = optionsData?.facilities || [];
 
   const update = (field: string, value: string | string[]) => {
     setForm(prev => ({ ...prev, [field]: value }));
+    // Clear the field's error as soon as the user starts correcting it.
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
+
+  // Live password feedback, but only after the user has typed something — an
+  // empty form shouldn't open with red text.
+  const passwordError = touchedPassword
+    ? passwordProblem(form.accountPassword, form.accountConfirm)
+    : null;
+
+  const validateStepOne = (): boolean => {
+    const next: Record<string, string> = {};
+    if (form.name.trim().length < 2) next.name = 'Enter the school name';
+    if (form.types.length === 0) next.types = 'Select at least one school type';
+    if (!form.category) next.category = 'Select a category';
+    if (form.description.trim().length < 10) {
+      next.description = 'Add a short description (at least 10 characters)';
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const validateStepTwo = (): boolean => {
+    const next: Record<string, string> = {};
+    if (form.phone.trim().length < 6) next.phone = 'Enter a valid phone number';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+      next.email = 'Enter a valid email address';
+    }
+    if (form.address.trim().length < 5) next.address = 'Enter the school address';
+    if (form.city.trim().length < 2) next.city = 'Enter the city';
+    if (form.region.trim().length < 2) next.region = 'Enter the region';
+
+    if (!token) {
+      if (!form.accountName.trim()) next.accountName = 'Enter your full name';
+      const problem = passwordProblem(form.accountPassword, form.accountConfirm);
+      if (problem) next.accountPassword = problem;
+    }
+
+    setErrors(next);
+    if (!token) setTouchedPassword(true);
+    return Object.keys(next).length === 0;
+  };
+
+  const validatePhotos = (): boolean => {
+    const next: Record<string, string> = {};
+    if (!form.logo) next.logo = 'Upload your school badge or logo';
+    if (!form.coverImage) next.coverImage = 'Upload at least one photo of your school';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  /**
+   * The account is created when leaving step 2 rather than at final submit, so
+   * the photo step has a token to authenticate uploads with. It also means a
+   * school owner who abandons the form can sign back in and finish, instead of
+   * losing everything.
+   */
+  const ensureAccount = async (): Promise<string | null> => {
+    if (token) return token;
+
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.accountName,
+        email: form.email,
+        password: form.accountPassword,
+        role: 'school',
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 409) {
+        throw new Error(
+          'An account with this email already exists. Please sign in first, then register your school.'
+        );
+      }
+      throw new Error(data.error || 'Failed to create account');
+    }
+
+    if (data.user) {
+      setUser({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        favorites: data.user.favorites || [],
+        createdAt: new Date().toISOString(),
+      });
+    }
+    setToken(data.token || null);
+    return data.token as string;
+  };
+
+  const handleStepTwoContinue = async () => {
+    if (!validateStepTwo()) return;
+
+    setLoading(true);
+    try {
+      await ensureAccount();
+      setStep(3);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to create account', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass = (field: string) =>
+    `w-full px-4 py-3 border rounded-xl text-sm outline-none transition-colors focus:ring-2 focus:ring-primary/20 ${
+      errors[field] ? 'border-error focus:border-error' : 'border-border focus:border-primary'
+    }`;
+
+  const FieldError = ({ field }: { field: string }) =>
+    errors[field] ? <p className="text-xs text-error mt-1.5">{errors[field]}</p> : null;
 
   const toggleType = (t: string) => {
     setForm(prev => ({
@@ -126,39 +257,31 @@ export default function RegisterSchoolPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Re-check the earlier steps — the user can reach the last step and then go
+    // back to edit a field, and a server-side 400 is a poor way to find out.
+    if (!validateStepOne()) {
+      setStep(1);
+      showToast('Please complete the highlighted fields', 'error');
+      return;
+    }
+    if (!validateStepTwo()) {
+      setStep(2);
+      showToast('Please complete the highlighted fields', 'error');
+      return;
+    }
+    if (!validatePhotos()) {
+      setStep(3);
+      showToast('Please add your school badge and a photo', 'error');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      let authToken = token;
-
-      if (!authToken) {
-        const signupRes = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: form.accountName,
-            email: form.email,
-            password: form.accountPassword,
-            role: 'school',
-          }),
-        });
-        const signupData = await signupRes.json();
-        if (!signupRes.ok) throw new Error(signupData.error || 'Failed to create account');
-        authToken = signupData.token;
-
-        // Log the new school owner in immediately so the dashboard loads.
-        if (signupData.user) {
-          setUser({
-            id: signupData.user.id,
-            name: signupData.user.name,
-            email: signupData.user.email,
-            role: signupData.user.role,
-            favorites: signupData.user.favorites || [],
-            createdAt: new Date().toISOString(),
-          });
-        }
-        setToken(authToken || null);
-      }
+      // Normally created back at step 2; this covers the case where that call
+      // failed and the user pushed on anyway.
+      const authToken = await ensureAccount();
 
       const res = await fetch('/api/schools', {
         method: 'POST',
@@ -168,9 +291,10 @@ export default function RegisterSchoolPage() {
         },
         body: JSON.stringify({
           name: form.name,
-          type: form.types
-            .map(t => t === 'secondary' ? `secondary_${form.secondaryLevel}` : t)
-            .join(','),
+          // Every level the school offers. Secondary carries its O / O&A variant.
+          types: form.types.map(t =>
+            t === 'secondary' ? `secondary_${form.secondaryLevel}` : t
+          ),
           category: form.category,
           gender: form.gender,
           description: form.description,
@@ -185,15 +309,26 @@ export default function RegisterSchoolPage() {
           country: form.country,
           latitude: form.latitude,
           longitude: form.longitude,
+          logo: form.logo,
+          coverImage: form.coverImage,
+          gallery: form.gallery,
           dayMin: form.feesDayMin,
           dayMax: form.feesDayMax,
           facilities: form.facilities,
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || 'Failed to register school');
+      }
+
+      // Registering upgrades a parent account to a school owner and returns a
+      // fresh token carrying the new role — store it, or the dashboard redirect
+      // bounces straight back to the homepage.
+      if (data.token) {
+        setToken(data.token);
+        if (user) setUser({ ...user, role: 'school' });
       }
 
       showToast('School registered successfully! Pending admin approval.', 'success');
@@ -216,13 +351,15 @@ export default function RegisterSchoolPage() {
       </div>
 
       {/* Progress */}
-      <div className="flex items-center justify-center gap-2 mb-10">
-        {[1, 2, 3].map(s => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+      <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-10">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(s => (
+          <div key={s} className="flex items-center gap-1.5 sm:gap-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
               step >= s ? 'bg-primary text-white' : 'bg-border text-text-muted'
             }`}>{s}</div>
-            {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-primary' : 'bg-border'}`} />}
+            {s < TOTAL_STEPS && (
+              <div className={`w-8 sm:w-12 h-0.5 transition-colors ${step > s ? 'bg-primary' : 'bg-border'}`} />
+            )}
           </div>
         ))}
       </div>
@@ -235,7 +372,8 @@ export default function RegisterSchoolPage() {
               <label className="block text-sm font-medium text-text-primary mb-2">School Name *</label>
               <input type="text" required value={form.name} onChange={e => update('name', e.target.value)}
                 placeholder="e.g. Kampala Junior Academy"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                className={inputClass('name')} />
+              <FieldError field="name" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
@@ -257,10 +395,13 @@ export default function RegisterSchoolPage() {
                     <span className="text-sm">{t.label}</span>
                   </label>
                 ))}
-                {schoolTypes.length === 0 && (
-                  <p className="text-sm text-text-secondary col-span-full">No type options available yet.</p>
-                )}
               </div>
+              <FieldError field="types" />
+              {form.types.length > 1 && (
+                <p className="text-xs text-text-secondary mt-2">
+                  Listing {form.types.length} levels — parents searching any of them will find you.
+                </p>
+              )}
               {form.types.includes('secondary') && (
                 <div className="mt-3 pl-4 border-l-2 border-primary/30">
                   <p className="text-xs font-medium text-text-secondary mb-2">Secondary level offered</p>
@@ -283,17 +424,19 @@ export default function RegisterSchoolPage() {
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Category *</label>
                 <select required value={form.category} onChange={e => update('category', e.target.value)}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                  <option value="">{schoolCategories.length ? 'Select category' : 'No category options available'}</option>
-                  {schoolCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  className={`${inputClass('category')} bg-surface`}>
+                  <option value="">Select category</option>
+                  {(schoolCategories.length ? schoolCategories : DEFAULT_CATEGORY_OPTIONS)
+                    .map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
+                <FieldError field="category" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Gender Mode *</label>
                 <select required value={form.gender} onChange={e => update('gender', e.target.value)}
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                  <option value="">{schoolGenders.length ? 'Select gender mode' : 'No gender options available'}</option>
-                  {schoolGenders.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+                  className={`${inputClass('gender')} bg-surface`}>
+                  {(schoolGenders.length ? schoolGenders : DEFAULT_GENDER_OPTIONS)
+                    .map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
               </div>
             </div>
@@ -301,13 +444,10 @@ export default function RegisterSchoolPage() {
               <label className="block text-sm font-medium text-text-primary mb-2">Description *</label>
               <textarea required value={form.description} onChange={e => update('description', e.target.value)}
                 rows={4} placeholder="Tell parents about your school..."
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none" />
+                className={`${inputClass('description')} resize-none`} />
+              <FieldError field="description" />
             </div>
-            <button type="button" onClick={() => {
-                if (form.types.length === 0) { showToast('Please select at least one school type', 'error'); return; }
-                if (!form.category) { showToast('Please select a category', 'error'); return; }
-                setStep(2);
-              }}
+            <button type="button" onClick={() => { if (validateStepOne()) setStep(2); }}
               className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
               Continue
             </button>
@@ -325,44 +465,72 @@ export default function RegisterSchoolPage() {
                   <p className="text-xs text-text-secondary">You&apos;ll use this to manage your school listing. The school email below will be your login.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">Your Full Name *</label>
-                  <input type="text" value={form.accountName} onChange={e => update('accountName', e.target.value)}
-                    placeholder="e.g. John Doe"
-                    className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  <label htmlFor="account-name" className="block text-sm font-medium text-text-primary mb-2">Your Full Name *</label>
+                  <input id="account-name" type="text" value={form.accountName}
+                    onChange={e => update('accountName', e.target.value)}
+                    placeholder="e.g. John Doe" autoComplete="name"
+                    className={`${inputClass('accountName')} bg-surface`} />
+                  <FieldError field="accountName" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                {/* Stacked, not side by side — two password boxes in a 2-column grid
+                    leaves ~150px each on a phone, which is where most school admins
+                    are filling this in. */}
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-text-primary mb-2">Password *</label>
-                    <input type="password" value={form.accountPassword} onChange={e => update('accountPassword', e.target.value)}
-                      placeholder="Min 8 chars"
-                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                    <PasswordField
+                      id="account-password"
+                      name="new-password"
+                      label="Password *"
+                      value={form.accountPassword}
+                      onChange={v => {
+                        setTouchedPassword(true);
+                        update('accountPassword', v);
+                      }}
+                      placeholder="Choose a strong password"
+                      autoComplete="new-password"
+                    />
+                    <PasswordChecklist value={form.accountPassword} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-2">Confirm Password *</label>
-                    <input type="password" value={form.accountConfirm} onChange={e => update('accountConfirm', e.target.value)}
-                      placeholder="Repeat password"
-                      className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
-                  </div>
+                  <PasswordField
+                    id="account-confirm"
+                    name="confirm-password"
+                    label="Confirm Password *"
+                    value={form.accountConfirm}
+                    onChange={v => {
+                      setTouchedPassword(true);
+                      update('accountConfirm', v);
+                    }}
+                    placeholder="Repeat password"
+                    autoComplete="new-password"
+                    error={
+                      errors.accountPassword
+                      || (form.accountConfirm && form.accountPassword !== form.accountConfirm
+                        ? 'Passwords do not match'
+                        : passwordError && form.accountConfirm ? passwordError : null)
+                    }
+                  />
                 </div>
-                <p className="text-xs text-text-muted">Password must be 8+ characters with uppercase, lowercase, and a number.</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Phone *</label>
                 <input type="tel" required value={form.phone} onChange={e => update('phone', e.target.value)}
-                  placeholder="+256 7XX XXX XXX"
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  placeholder="+256 7XX XXX XXX" autoComplete="tel"
+                  className={inputClass('phone')} />
+                <FieldError field="phone" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">{token ? 'Email *' : 'School Email (login) *'}</label>
                 <input type="email" required value={form.email} onChange={e => update('email', e.target.value)}
-                  placeholder="info@school.ac.ug"
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  placeholder="info@school.ac.ug" autoComplete="email"
+                  className={inputClass('email')} />
+                <FieldError field="email" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Website</label>
                 <input type="url" value={form.website} onChange={e => update('website', e.target.value)}
@@ -392,6 +560,7 @@ export default function RegisterSchoolPage() {
                 placeholder="Start typing the school's location…"
                 required
               />
+              <FieldError field="address" />
               <p className="text-xs text-text-muted mt-1.5">Type to search, or use GPS below — City &amp; Region fill in automatically.</p>
             </div>
             <div className="rounded-xl border border-border p-3 bg-hover">
@@ -413,18 +582,20 @@ export default function RegisterSchoolPage() {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">City *</label>
                 <input type="text" required value={form.city} onChange={e => update('city', e.target.value)}
-                  placeholder="e.g. Kampala"
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  placeholder="e.g. Kampala" autoComplete="address-level2"
+                  className={inputClass('city')} />
+                <FieldError field="city" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Region *</label>
                 <input type="text" required value={form.region} onChange={e => update('region', e.target.value)}
-                  placeholder="e.g. Central Region"
-                  className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  placeholder="e.g. Central Region" autoComplete="address-level1"
+                  className={inputClass('region')} />
+                <FieldError field="region" />
               </div>
             </div>
             <div className="flex gap-3">
@@ -432,15 +603,86 @@ export default function RegisterSchoolPage() {
                 className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
                 Back
               </button>
-              <button type="button" onClick={() => {
-                  if (!token) {
-                    const pwRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-                    if (!form.accountName.trim()) { showToast('Please enter your full name', 'error'); return; }
-                    if (!pwRule.test(form.accountPassword)) { showToast('Password must be 8+ chars with uppercase, lowercase, and a number', 'error'); return; }
-                    if (form.accountPassword !== form.accountConfirm) { showToast('Passwords do not match', 'error'); return; }
-                  }
-                  setStep(3);
-                }}
+              <button type="button" onClick={handleStepTwoContinue} disabled={loading}
+                className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-60">
+                {loading ? 'Please wait…' : 'Continue'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary mb-1">School Photos</h2>
+              <p className="text-sm text-text-secondary">
+                Listings with a badge and a real photo get noticeably more parent enquiries.
+              </p>
+            </div>
+
+            <ImageUploadField
+              label="School badge / logo"
+              hint="Square works best. JPG, PNG, or WebP up to 5 MB."
+              kind="logo"
+              shape="square"
+              required
+              token={token}
+              value={form.logo}
+              onChange={url => update('logo', url)}
+              error={errors.logo}
+            />
+
+            <ImageUploadField
+              label="Cover photo"
+              hint="A wide shot of your school — this is the first thing parents see."
+              kind="cover"
+              shape="wide"
+              required
+              token={token}
+              value={form.coverImage}
+              onChange={url => update('coverImage', url)}
+              error={errors.coverImage}
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                More photos <span className="text-text-muted font-normal">(optional)</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {form.gallery.map((url, i) => (
+                  <div key={url} className="relative aspect-video rounded-xl overflow-hidden border border-border">
+                    <Image src={url} alt={`School photo ${i + 1}`} fill sizes="200px" className="object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => update('gallery', form.gallery.filter(g => g !== url))}
+                      aria-label={`Remove photo ${i + 1}`}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                {form.gallery.length < 8 && (
+                  <ImageUploadField
+                    label=""
+                    kind="gallery"
+                    shape="wide"
+                    token={token}
+                    value=""
+                    onChange={url => url && update('gallery', [...form.gallery, url])}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setStep(2)}
+                className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
+                Back
+              </button>
+              <button type="button" onClick={() => { if (validatePhotos()) setStep(4); }}
                 className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
                 Continue
               </button>
@@ -448,7 +690,7 @@ export default function RegisterSchoolPage() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-text-primary mb-4">Fees & Facilities</h2>
             <div className="grid grid-cols-2 gap-4">
@@ -468,7 +710,7 @@ export default function RegisterSchoolPage() {
             <div>
               <label className="block text-sm font-medium text-text-primary mb-3">Facilities</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {facilities.map(f => (
+                {(facilities.length ? facilities : [...DEFAULT_FACILITIES]).map(f => (
                   <label key={f} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
                     form.facilities.includes(f) ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-hover'
                   }`}>
@@ -476,13 +718,10 @@ export default function RegisterSchoolPage() {
                     <span className="text-sm">{f}</span>
                   </label>
                 ))}
-                {facilities.length === 0 && (
-                  <p className="text-sm text-text-secondary col-span-full">No facility options available yet.</p>
-                )}
               </div>
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setStep(2)}
+              <button type="button" onClick={() => setStep(3)}
                 className="flex-1 py-3 border border-border text-text-primary font-semibold rounded-xl hover:bg-hover transition-colors">
                 Back
               </button>

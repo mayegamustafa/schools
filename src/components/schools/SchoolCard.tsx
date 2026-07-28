@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { School } from '@/types';
-import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolCategoryLabel, getSchoolGenderLabel, getSchoolTypeColor, getSchoolTypeLabel, sanitizeImageSrc } from '@/utils/helpers';
+import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolCategoryLabel, getSchoolGenderLabel, getSchoolTypeColor, getSchoolTypesLabel, sanitizeImageSrc } from '@/utils/helpers';
 
 interface SchoolCardProps {
   school: School;
@@ -114,7 +114,7 @@ export default function SchoolCard({ school, layout = 'grid' }: SchoolCardProps)
 
           <div className="flex flex-wrap gap-2 mb-5">
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getSchoolTypeColor(school.type)}`}>
-              {getSchoolTypeLabel(school.type)}
+              {getSchoolTypesLabel(school.types, school.type)}
             </span>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-hover text-text-secondary">
               {getSchoolCategoryLabel(school.category)}
@@ -204,7 +204,7 @@ export default function SchoolCard({ school, layout = 'grid' }: SchoolCardProps)
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getSchoolTypeColor(school.type)}`}>
-            {getSchoolTypeLabel(school.type)}
+            {getSchoolTypesLabel(school.types, school.type)}
           </span>
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-hover text-text-secondary">
             {school.category === 'day' ? 'Day' : school.category === 'boarding' ? 'Boarding' : 'Mixed'}

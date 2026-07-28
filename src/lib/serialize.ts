@@ -26,12 +26,15 @@ export function serializeSchool(s: DbSchool): School {
   const logo = toNonEmptyString(s.logo) || FALLBACK_LOGO_IMAGE;
   const gallery = parseStringArray(s.gallery);
   const videos = parseStringArray(s.videos);
+  // Rows created before the multi-level migration may have an empty `types`.
+  const types = (s.types.length > 0 ? s.types : [s.type]) as School['types'];
 
   return {
     id: s.id,
     name: s.name,
     slug: s.slug,
     type: s.type as School['type'],
+    types,
     category: s.category as School['category'],
     gender: (s.gender as School['gender']) || 'mixed',
     description: s.description,
@@ -61,7 +64,7 @@ export function serializeSchool(s: DbSchool): School {
       boardingMin: s.boardingMin ?? undefined,
       boardingMax: s.boardingMax ?? undefined,
     },
-    facilities: parseStringArray(s.facilities),
+    facilities: s.facilities.filter(Boolean),
     rating: s.rating,
     reviewCount: s.reviewCount,
     isVerified: s.isVerified,

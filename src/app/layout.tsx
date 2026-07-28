@@ -4,14 +4,47 @@ import { AppProvider } from "@/context/AppContext";
 import Toast from "@/components/ui/Toast";
 import { prisma } from "@/lib/prisma";
 import { deriveColorVars } from "@/lib/site-defaults";
+import { siteUrl } from "@/lib/site-url";
+
+const SITE_DESCRIPTION =
+  "Find, compare, and connect with top-rated schools in Uganda. Daycares, kindergartens, "
+  + "primary and secondary schools, and universities — with fees, facilities, and real parent reviews.";
 
 export const metadata: Metadata = {
-  title: "SchoolFinder — Discover & Compare the Best Schools",
-  description: "Find, compare, and connect with top-rated schools near you. Kindergartens, primary schools, secondary schools, and universities — all in one trusted platform.",
+  // Lets child pages set just their own title while keeping the brand suffix,
+  // and makes relative Open Graph image paths resolve.
+  metadataBase: new URL(siteUrl()),
+  title: {
+    default: "SchoolFinder — Discover & Compare the Best Schools in Uganda",
+    template: "%s | SchoolFinder",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "SchoolFinder",
+  keywords: [
+    "schools in Uganda", "Kampala schools", "school fees Uganda",
+    "primary schools", "secondary schools", "boarding schools", "day schools",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "SchoolFinder",
+    title: "SchoolFinder — Discover & Compare the Best Schools in Uganda",
+    description: SITE_DESCRIPTION,
+    url: siteUrl(),
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SchoolFinder — Discover & Compare the Best Schools in Uganda",
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
   manifest: "/manifest.json",
   icons: { apple: "/icon-192.png" },
-  // Native iOS Safari Smart App Banner — update app-id when the app is published
-  other: { 'apple-itunes-app': 'app-id=000000000' },
+  // Native iOS Safari Smart App Banner. Only emitted once a real App Store ID
+  // exists — the placeholder "000000000" rendered a broken banner in Safari.
+  ...(process.env.NEXT_PUBLIC_APPLE_APP_ID
+    ? { other: { 'apple-itunes-app': `app-id=${process.env.NEXT_PUBLIC_APPLE_APP_ID}` } }
+    : {}),
 };
 
 export const viewport: Viewport = {

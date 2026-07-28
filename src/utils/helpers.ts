@@ -35,6 +35,12 @@ export function getSchoolTypeLabel(type: string): string {
   return labels[type] || type;
 }
 
+/** Joins every level a school offers, e.g. "Primary School · Secondary (O & A Level)". */
+export function getSchoolTypesLabel(types: string[] | undefined, fallback: string): string {
+  if (!types || types.length === 0) return getSchoolTypeLabel(fallback);
+  return types.map(getSchoolTypeLabel).join(' · ');
+}
+
 export function getSchoolCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
     day: 'Day School',
@@ -62,7 +68,10 @@ export function getSchoolTypeColor(type: string): string {
     university: 'bg-hover text-text-secondary',
     daycare: 'bg-success/10 text-success',
   };
-  return colors[type] || 'bg-hover text-text-secondary';
+  // secondary_o / secondary_oa share the secondary colour rather than falling
+  // through to the neutral default.
+  const key = type.startsWith('secondary') ? 'secondary' : type;
+  return colors[key] || 'bg-hover text-text-secondary';
 }
 
 export function generateStars(rating: number): { full: number; half: boolean; empty: number } {

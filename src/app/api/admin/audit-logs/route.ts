@@ -19,9 +19,9 @@ export async function GET(request: Request) {
   if (resource && resource !== 'all') where.resource = resource;
   if (q) {
     where.OR = [
-      { actorName: { contains: q } },
-      { resource: { contains: q } },
-      { action: { contains: q } },
+      { actorName: { contains: q, mode: 'insensitive' } },
+      { resource: { contains: q, mode: 'insensitive' } },
+      { action: { contains: q, mode: 'insensitive' } },
     ];
   }
 

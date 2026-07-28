@@ -41,8 +41,8 @@ export async function GET(request: Request) {
   if (role !== 'all') where.role = role;
   if (q) {
     where.OR = [
-      { name: { contains: q } },
-      { email: { contains: q } },
+      { name: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
     ];
   }
 

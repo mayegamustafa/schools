@@ -95,6 +95,34 @@ export default function DashboardOverviewPage() {
     );
   }
 
+  // The account is created partway through registration, so an owner who
+  // abandoned the form (or came back on another device) lands here with no
+  // school yet. Point them back at the form instead of showing a bare error.
+  const hasNoSchool = error instanceof Error && /no school/i.test(error.message);
+
+  if (hasNoSchool) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+          <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6M9 11h6M9 15h4" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-text-primary mb-3">Finish listing your school</h1>
+        <p className="text-text-secondary mb-6">
+          Your account is ready — add your school details, badge, and photos to go live.
+        </p>
+        <Link
+          href="/schools/register"
+          className="inline-block px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+        >
+          Continue registration
+        </Link>
+      </div>
+    );
+  }
+
   if (error || !data) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">

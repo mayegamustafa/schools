@@ -21,10 +21,10 @@ export async function GET(request: Request) {
   if (status !== 'all') schoolWhere.status = status;
   if (query) {
     schoolWhere.OR = [
-      { name: { contains: query } },
-      { city: { contains: query } },
-      { region: { contains: query } },
-      { type: { contains: query } },
+      { name: { contains: query, mode: 'insensitive' } },
+      { city: { contains: query, mode: 'insensitive' } },
+      { region: { contains: query, mode: 'insensitive' } },
+      { type: { contains: query, mode: 'insensitive' } },
     ];
   }
 

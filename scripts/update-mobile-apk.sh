@@ -50,6 +50,26 @@ cat > android/app/src/main/res/xml/secure_store_data_extraction_rules.xml <<'XML
 </data-extraction-rules>
 XML
 
+# 2c. Shrink the APK.
+#
+# The universal release APK was ~96MB, which is a serious install barrier on
+# metered mobile data — and it is the only distribution channel, since there is
+# no Play Store listing yet. Two safe reductions:
+#
+#   * Drop the x86/x86_64 native libraries. Those ABIs are only used by emulators;
+#     every real Android phone is armeabi-v7a or arm64-v8a, so nothing that can
+#     currently install the app loses support.
+#   * Enable R8 minification and resource shrinking for the release build.
+#
+# Expect roughly 25-35MB after this. Verify on a physical device before shipping.
+cat >> android/gradle.properties <<'PROPS'
+
+# Added by scripts/update-mobile-apk.sh — see comments there.
+android.enableProguardInReleaseBuilds=true
+android.enableShrinkResourcesInReleaseBuilds=true
+reactNativeArchitectures=armeabi-v7a,arm64-v8a
+PROPS
+
 # 3. Build the release APK
 cd android
 ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}" EXPO_PUBLIC_API_URL="$API_URL" ./gradlew assembleRelease

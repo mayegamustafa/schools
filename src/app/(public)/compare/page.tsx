@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { School } from '@/types';
 import { StarRating } from '@/components/ui/StarRating';
-import { formatCurrency, getSchoolTypeLabel, getSchoolCategoryLabel, getSchoolGenderLabel, sanitizeImageSrc } from '@/utils/helpers';
+import { formatCurrency, getSchoolTypesLabel, getSchoolCategoryLabel, getSchoolGenderLabel, sanitizeImageSrc } from '@/utils/helpers';
 import { ScaleIcon } from '@/components/ui/Icons';
 
 export default function ComparePage() {
@@ -108,7 +108,7 @@ export default function ComparePage() {
                   <span className="text-sm font-semibold">{s.rating} ({s.reviewCount})</span>
                 </div>
               )},
-              { label: 'Type', render: (s: School) => getSchoolTypeLabel(s.type) },
+              { label: 'Type', render: (s: School) => getSchoolTypesLabel(s.types, s.type) },
               { label: 'Category', render: (s: School) => getSchoolCategoryLabel(s.category) },
               { label: 'Gender Mode', render: (s: School) => getSchoolGenderLabel(s.gender) },
               { label: 'Location', render: (s: School) => `${s.location.city}, ${s.location.region}` },

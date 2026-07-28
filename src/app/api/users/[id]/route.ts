@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit';
 import { hashSync } from 'bcryptjs';
 
 const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const PASSWORD_MAX_LENGTH = 72;
 
 export async function PATCH(
   request: Request,
@@ -28,6 +29,12 @@ export async function PATCH(
   }
   if (body.name) data.name = String(body.name).slice(0, 100);
   if (body.password) {
+    if (String(body.password).length > PASSWORD_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `Password must be ${PASSWORD_MAX_LENGTH} characters or fewer` },
+        { status: 400 }
+      );
+    }
     if (!PASSWORD_RULE.test(String(body.password))) {
       return NextResponse.json(
         { error: 'Password must be 8+ chars with uppercase, lowercase, and a number' },

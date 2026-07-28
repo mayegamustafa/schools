@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const where: any = {};
   if (status && status !== 'all') where.status = status;
   if (q) {
-    where.school = { name: { contains: q } };
+    where.school = { name: { contains: q, mode: 'insensitive' } };
   }
 
   const [subscriptions, total] = await Promise.all([

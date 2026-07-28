@@ -2,7 +2,10 @@ export interface School {
   id: string;
   name: string;
   slug: string;
+  /** Primary level, kept for display and legacy consumers. */
   type: SchoolType;
+  /** Every level the school offers — a school can be primary *and* secondary. */
+  types: SchoolType[];
   category: SchoolCategory;
   gender: SchoolGender;
   description: string;
@@ -100,6 +103,8 @@ export interface Conversation {
 
 export interface SearchFilters {
   query: string;
+  /** Exact city match, driven by the live location filter. */
+  city?: string;
   type?: SchoolType;
   category?: SchoolCategory;
   gender?: SchoolGender;

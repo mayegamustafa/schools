@@ -19,6 +19,7 @@ const toSortBy = (value: string | null): SearchFilters['sortBy'] => {
 
 const getFiltersFromParams = (searchParams: { get: (key: string) => string | null }): SearchFilters => ({
   query: searchParams.get('q') || '',
+  city: searchParams.get('city') || undefined,
   type: (searchParams.get('type') as SchoolType | null) || undefined,
   category: (searchParams.get('category') as SearchFilters['category'] | null) || undefined,
   gender: (searchParams.get('gender') as SchoolGender | null) || undefined,
@@ -35,12 +36,16 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [nearArea, setNearArea] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const hasNearFilter = typeof filters.latitude === 'number' && typeof filters.longitude === 'number';
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.query) params.set('q', filters.query);
+    if (filters.city) params.set('city', filters.city);
     if (filters.type) params.set('type', filters.type);
     if (filters.category) params.set('category', filters.category);
     if (filters.gender) params.set('gender', filters.gender);
@@ -59,12 +64,22 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
       params.set('radius', String(filters.radius || 25));
     }
 
+    params.set('page', String(page));
+
     fetch(`/api/schools?${params.toString()}`)
       .then(res => res.json())
-      .then(data => setSchools(data.schools || []))
-      .catch(() => setSchools([]))
+      .then(data => {
+        setSchools(data.schools || []);
+        setTotal(data.total || 0);
+        setTotalPages(data.pages || 1);
+      })
+      .catch(() => {
+        setSchools([]);
+        setTotal(0);
+        setTotalPages(1);
+      })
       .finally(() => setLoading(false));
-  }, [filters]);
+  }, [filters, page]);
 
   useEffect(() => {
     if (!hasNearFilter || filters.latitude === undefined || filters.longitude === undefined) return;
@@ -99,14 +114,24 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
     return () => controller.abort();
   }, [hasNearFilter, filters.latitude, filters.longitude]);
 
+  // Any filter change invalidates the current page — landing on page 4 of a
+  // narrower result set would show an empty list.
   const updateFilters = (partial: Partial<SearchFilters>) => {
     setLoading(true);
+    setPage(1);
     setFilters(prev => ({ ...prev, ...partial }));
   };
 
   const resetFilters = () => {
     setLoading(true);
+    setPage(1);
     setFilters({ query: '', sortBy: 'relevance' });
+  };
+
+  const goToPage = (next: number) => {
+    setLoading(true);
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -137,7 +162,7 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
                   </p>
                 )}
                 <p className="text-sm text-text-secondary">
-                  <span className="font-semibold text-text-primary">{schools.length}</span> schools found
+                  <span className="font-semibold text-text-primary">{total}</span> schools found
                   {hasNearFilter && (
                     <span className="ml-2">within {filters.radius || 25} km</span>
                   )}
@@ -210,7 +235,31 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
                 <SchoolCard key={school.id} school={school} layout={layout} />
               ))}
             </div>
-          ) : (
+          ) : null}
+
+          {!loading && schools.length > 0 && totalPages > 1 && (
+            <nav aria-label="Pagination" className="flex items-center justify-center gap-2 mt-10">
+              <button
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+                className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-text-secondary px-2">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => goToPage(page + 1)}
+                disabled={page >= totalPages}
+                className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </nav>
+          )}
+
+          {!loading && schools.length === 0 && (
             <div className="text-center py-20">
               <div className="flex justify-center mb-4"><BuildingOfficeIcon className="w-16 h-16 text-text-muted" /></div>
               <h3 className="text-xl font-semibold text-text-primary mb-2">No schools found</h3>

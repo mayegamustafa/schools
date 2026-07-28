@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-
-const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+import PasswordField, { PasswordChecklist, passwordProblem } from '@/components/ui/PasswordField';
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touchedPassword, setTouchedPassword] = useState(false);
   const { setUser, setToken, showToast, user } = useApp();
   const router = useRouter();
 
@@ -22,16 +22,10 @@ export default function SignUpPage() {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (!PASSWORD_RULE.test(formData.password)) {
-      setError('Password must include uppercase, lowercase, and a number');
+    const problem = passwordProblem(formData.password, formData.confirmPassword);
+    if (problem) {
+      setTouchedPassword(true);
+      setError(problem);
       return;
     }
 
@@ -111,27 +105,37 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">Password</label>
-              <input
-                type="password"
+              <PasswordField
+                id="signup-password"
+                label="Password"
                 required
                 value={formData.password}
-                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Min 8 characters"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                onChange={value => {
+                  setTouchedPassword(true);
+                  setFormData(prev => ({ ...prev, password: value }));
+                }}
+                placeholder="Choose a strong password"
+                autoComplete="new-password"
               />
+              <PasswordChecklist value={formData.password} />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">Confirm password</label>
-              <input
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={e => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Repeat password"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-              />
-            </div>
+            <PasswordField
+              id="signup-confirm"
+              label="Confirm password"
+              required
+              value={formData.confirmPassword}
+              onChange={value => {
+                setTouchedPassword(true);
+                setFormData(prev => ({ ...prev, confirmPassword: value }));
+              }}
+              placeholder="Repeat password"
+              autoComplete="new-password"
+              error={
+                touchedPassword && formData.confirmPassword && formData.password !== formData.confirmPassword
+                  ? 'Passwords do not match'
+                  : null
+              }
+            />
 
             {error && (
               <p className="text-sm text-error bg-error/10 px-4 py-2 rounded-lg">{error}</p>

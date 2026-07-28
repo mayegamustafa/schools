@@ -20,9 +20,9 @@ export async function GET(request: Request) {
   if (priority && priority !== 'all') where.priority = priority;
   if (q) {
     where.OR = [
-      { subject: { contains: q } },
-      { submitterName: { contains: q } },
-      { submitterEmail: { contains: q } },
+      { subject: { contains: q, mode: 'insensitive' } },
+      { submitterName: { contains: q, mode: 'insensitive' } },
+      { submitterEmail: { contains: q, mode: 'insensitive' } },
     ];
   }
 

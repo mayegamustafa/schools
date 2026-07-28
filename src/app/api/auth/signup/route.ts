@@ -3,12 +3,18 @@ import { prisma } from '@/lib/prisma';
 import { hashSync } from 'bcryptjs';
 import { createAuthToken, normalizeRole } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/** bcrypt ignores bytes past 72 — reject rather than silently truncating. */
+const PASSWORD_MAX_LENGTH = 72;
 const COOKIE_MAX_AGE = 60 * 60 * 24;
 
 export async function POST(request: Request) {
+  const limit = rateLimit(request, 'signup', { limit: 5, windowMs: 60 * 60 * 1000 });
+  if (!limit.ok) return rateLimitResponse(limit);
+
   try {
     const body = await request.json();
     const { name, email, password, role } = body;
@@ -23,6 +29,13 @@ export async function POST(request: Request) {
 
     if (String(name).trim().length < 2) {
       return NextResponse.json({ error: 'Name must be at least 2 characters' }, { status: 400 });
+    }
+
+    if (String(password).length > PASSWORD_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `Password must be ${PASSWORD_MAX_LENGTH} characters or fewer` },
+        { status: 400 }
+      );
     }
 
     if (!PASSWORD_RULE.test(String(password))) {

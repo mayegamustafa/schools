@@ -13,7 +13,10 @@ model School {
   slug             String   @unique
   ownerUserId      String?
   owner            User?    @relation("SchoolOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  // `type` is the school's primary level, kept as a scalar for legacy consumers.
+  // `types` is the full set — a school can offer several levels at once.
   type             String
+  types            String[] @default([])
   category         String
   gender           String   @default("mixed")
   description      String
@@ -37,7 +40,7 @@ model School {
   dayMax           Int
   boardingMin      Int?
   boardingMax      Int?
-  facilities       String   @default("[]")
+  facilities       String[] @default([])
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
   isVerified       Boolean  @default(false)
@@ -51,6 +54,14 @@ model School {
   payments         Payment[]
   subscription     SchoolSubscription?
   conversations    Conversation[]
+
+  @@index([status, createdAt])
+  @@index([status, rating])
+  @@index([ownerUserId])
+  @@index([city])
+  @@index([isFeatured])
+  @@index([types], type: Gin)
+  @@index([facilities], type: Gin)
 }
 
 model Review {

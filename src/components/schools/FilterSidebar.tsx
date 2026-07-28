@@ -3,6 +3,7 @@
 import { SearchFilters, SchoolType, SchoolCategory, SchoolGender } from '@/types';
 import { useState } from 'react';
 import useSWR from 'swr';
+import LocationFilter from '@/components/schools/LocationFilter';
 
 interface SelectOption {
   value: string;
@@ -48,6 +49,15 @@ export default function FilterSidebar({ filters, onChange, onReset, className = 
         <button onClick={onReset} className="text-sm text-primary hover:text-primary-dark font-medium">
           Reset
         </button>
+      </div>
+
+      {/* Location */}
+      <div className="border-b border-border pb-4 mb-4">
+        <span className="text-sm font-semibold text-text-primary block mb-3">City</span>
+        <LocationFilter
+          value={filters.city || ''}
+          onSelect={city => onChange({ city: city || undefined })}
+        />
       </div>
 
       {/* School Type */}

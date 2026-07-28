@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SchoolFinder
 
-## Getting Started
+A school directory for Uganda: parents search, compare, and contact schools; schools
+manage their listing from a dashboard; admins moderate listings, plans, and support.
 
-First, run the development server:
+Next.js 16 (App Router) · Prisma 7 · PostgreSQL · Tailwind v4 · JWT auth (`jose`) ·
+Cloudinary for media. A companion Expo/React Native app lives in a separate repo.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env          # then fill in the values
+npx prisma migrate deploy     # apply schema
+npx prisma db seed            # optional demo data
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Every variable in `.env.example` is documented there. Two are load-bearing in
+production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **`AUTH_SECRET`** — without it the app falls back to a known development secret,
+  which would let anyone forge an admin session.
+- **`CLOUDINARY_*`** — all school media lives in Cloudinary. Without it, uploads
+  return 503 and schools cannot complete registration (a badge and cover photo are
+  required).
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/(public)      Public site — home, listings, school profiles, city pages
+src/app/(auth)        Sign in, sign up, password recovery
+src/app/(dashboard)   School owner dashboard
+src/app/(admin)       Admin console
+src/app/api           Route handlers
+src/lib               prisma, auth, taxonomy, cloudinary, rate-limit, serialize
+src/proxy.ts          Middleware — guards /dashboard and /admin by role
+prisma/               Schema, migrations, seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Things worth knowing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **School levels.** A school can offer several levels at once, held in
+  `School.types` (`primary`, `secondary_oa`, …). `School.type` keeps the primary
+  level for display. Validation and grouping live in `src/lib/taxonomy.ts` — add new
+  levels there, not inline in route handlers.
+- **Search.** `contains` filters must pass `mode: 'insensitive'`; PostgreSQL `LIKE`
+  is case-sensitive, so omitting it silently breaks search.
+- **Media.** Uploads go through `/api/uploads` to Cloudinary. `schoolId` is optional
+  so the registration form can upload before the school row exists.
+- **Rate limiting** (`src/lib/rate-limit.ts`) is in-process, so each instance keeps
+  its own counters. Move it to Redis before scaling horizontally.
+- **Payments are not wired up.** Subscription and payment writes are admin-only on
+  purpose; connect a gateway (Flutterwave / MTN MoMo / Airtel Money) and drive them
+  from its webhook rather than from a client request.
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | `prisma generate` + production build |
+| `npm start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit` | Type check |
+| `scripts/update-mobile-apk.sh` | Rebuild the Android APK and publish it to `public/downloads` |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying
+
+Railway. Set the environment variables above, run `npx prisma migrate deploy` against
+the production database, then deploy.

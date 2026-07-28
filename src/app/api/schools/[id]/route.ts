@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { serializeSchool } from '@/lib/serialize';
 import { requireAuth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { isValidCategory, isValidStatus, normalizeSchoolTypes } from '@/lib/taxonomy';
 
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -52,6 +53,12 @@ export async function PUT(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Only touch levels when the caller actually sent some; an unrecognised value
+  // shouldn't silently wipe the school's existing levels.
+  const updatedTypes = body.types !== undefined || body.type !== undefined
+    ? normalizeSchoolTypes(body.types ?? body.type)
+    : [];
+
   const school = await prisma.school.update({
     where: { id: existing.id },
     data: {
@@ -70,7 +77,9 @@ export async function PUT(
       ...(body.coverImage && { coverImage: body.coverImage }),
       ...(body.gallery !== undefined && { gallery: JSON.stringify(toStringArray(body.gallery)) }),
       ...(body.videos !== undefined && { videos: JSON.stringify(toStringArray(body.videos)) }),
-      ...(body.facilities !== undefined && { facilities: JSON.stringify(toStringArray(body.facilities)) }),
+      ...(body.facilities !== undefined && { facilities: toStringArray(body.facilities).slice(0, 40) }),
+      ...(updatedTypes.length > 0 && { type: updatedTypes[0], types: updatedTypes }),
+      ...(body.category && isValidCategory(String(body.category)) && { category: String(body.category) }),
       ...(body.dayMin !== undefined && { dayMin: Number(body.dayMin) }),
       ...(body.dayMax !== undefined && { dayMax: Number(body.dayMax) }),
       ...(body.boardingMin !== undefined && { boardingMin: body.boardingMin ? Number(body.boardingMin) : null }),
@@ -138,11 +147,10 @@ export async function PATCH(
     return NextResponse.json({ error: 'School not found' }, { status: 404 });
   }
 
-  const allowedStatus = ['active', 'pending', 'rejected', 'suspended'];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
 
-  if (body.status && allowedStatus.includes(body.status)) data.status = body.status;
+  if (body.status && isValidStatus(body.status)) data.status = body.status;
   if (body.isVerified !== undefined) data.isVerified = Boolean(body.isVerified);
   if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured);
   if (body.isPremium !== undefined) data.isPremium = Boolean(body.isPremium);

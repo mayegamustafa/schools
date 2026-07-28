@@ -3,10 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { compareSync } from 'bcryptjs';
 import { createAuthToken, normalizeRole } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24;
 
 export async function POST(request: Request) {
+  // Without this, the login endpoint accepts unlimited password guesses.
+  const limit = rateLimit(request, 'login', { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (!limit.ok) return rateLimitResponse(limit);
+
   try {
     const body = await request.json();
     const { email, password } = body;

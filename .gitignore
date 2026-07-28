@@ -39,8 +39,9 @@ yarn-error.log*
 *.db-shm
 *.db-wal
 
-# stray assets in root
-students-working-laptop-school.jpg
+# stray 6MB original in the repo root — the served copy lives in public/ and must
+# stay tracked (it is the fallback cover image for schools without one).
+/students-working-laptop-school.jpg
 
 # user-uploaded media (should be on cloud storage in production)
 /public/uploads/

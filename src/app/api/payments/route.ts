@@ -73,24 +73,30 @@ export async function GET(request: Request) {
   });
 }
 
+/**
+ * Recording a payment is admin-only. School accounts could previously POST their
+ * own payment rows with status "paid", which is the accounting side of the same
+ * hole that let them self-activate a subscription. Replace this with a gateway
+ * webhook when payments go live — GET stays open to school owners so they can
+ * still see their own history.
+ */
 export async function POST(request: Request) {
-  const auth = await requireAuth(request, ['admin', 'school']);
+  const auth = await requireAuth(request, ['admin']);
   if ('response' in auth) return auth.response;
 
   const body = await request.json();
 
-  let targetSchoolId: string | null = body.schoolId ? String(body.schoolId) : null;
-  if (auth.claims.role === 'school') {
-    const school = await prisma.school.findFirst({
-      where: { ownerUserId: auth.claims.sub },
-      select: { id: true },
-    });
-    if (!school) return NextResponse.json({ error: 'School profile not found' }, { status: 404 });
-    targetSchoolId = school.id;
-  }
-
+  const targetSchoolId: string | null = body.schoolId ? String(body.schoolId) : null;
   if (!targetSchoolId) {
     return NextResponse.json({ error: 'schoolId is required' }, { status: 400 });
+  }
+
+  const school = await prisma.school.findUnique({
+    where: { id: targetSchoolId },
+    select: { id: true },
+  });
+  if (!school) {
+    return NextResponse.json({ error: 'School not found' }, { status: 404 });
   }
 
   const amount = Number(body.amount || 0);

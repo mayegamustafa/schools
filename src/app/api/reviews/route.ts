@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { serializeReview } from '@/lib/serialize';
 import { requireAuth } from '@/lib/auth';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,6 +21,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const limit = rateLimit(request, 'review', { limit: 5, windowMs: 60 * 60 * 1000 });
+  if (!limit.ok) return rateLimitResponse(limit);
+
   const auth = await requireAuth(request, ['user', 'school', 'admin']);
   if ('response' in auth) return auth.response;
 
@@ -45,6 +49,27 @@ export async function POST(request: Request) {
   const school = await prisma.school.findUnique({ where: { id: schoolId } });
   if (!school) {
     return NextResponse.json({ error: 'School not found' }, { status: 404 });
+  }
+
+  // One review per person per school — nothing stopped a single account posting
+  // repeatedly to inflate (or sink) a school's rating.
+  const alreadyReviewed = await prisma.review.findFirst({
+    where: { schoolId, userId: auth.claims.sub },
+    select: { id: true },
+  });
+  if (alreadyReviewed) {
+    return NextResponse.json(
+      { error: 'You have already reviewed this school.' },
+      { status: 409 }
+    );
+  }
+
+  // A school owner rating their own listing is not a review.
+  if (school.ownerUserId === auth.claims.sub) {
+    return NextResponse.json(
+      { error: 'You cannot review your own school.' },
+      { status: 403 }
+    );
   }
 
   const review = await prisma.review.create({

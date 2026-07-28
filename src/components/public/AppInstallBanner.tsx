@@ -1,20 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { BANNER_DISMISSED_KEY } from '@/lib/mobile-app';
 
+/**
+ * Whether to show the banner depends on browser-only state (user agent and
+ * localStorage), so it can't be computed during SSR.
+ *
+ * useSyncExternalStore handles exactly this: the server snapshot is `false`, the
+ * client snapshot reads the real values, and React reconciles without a
+ * hydration mismatch. Setting this from inside an effect instead caused a
+ * cascading re-render, and a lazy useState initialiser would have made the
+ * server and client disagree on the first paint.
+ */
+const listeners = new Set<() => void>();
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+function getSnapshot(): boolean {
+  if (localStorage.getItem(BANNER_DISMISSED_KEY)) return false;
+  return /Android/.test(navigator.userAgent);
+}
+
 export default function AppInstallBanner() {
-  const [show, setShow] = useState(false);
+  const show = useSyncExternalStore(subscribe, getSnapshot, () => false);
 
-  useEffect(() => {
-    if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
-    if (/Android/.test(navigator.userAgent)) setShow(true);
-  }, []);
-
-  function handleDismiss() {
+  const handleDismiss = useCallback(() => {
     localStorage.setItem(BANNER_DISMISSED_KEY, '1');
-    setShow(false);
-  }
+    listeners.forEach(listener => listener());
+  }, []);
 
   function handleGet() {
     window.location.href = '/api/app/download';

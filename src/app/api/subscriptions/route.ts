@@ -77,8 +77,17 @@ export async function GET(request: Request) {
   });
 }
 
+/**
+ * Activating a paid plan is an admin-only action until a payment gateway is wired
+ * in. This endpoint used to accept `role: 'school'`, which let any school owner
+ * mark their own subscription active, write a matching "paid" Payment row and set
+ * isPremium — granting themselves a paid plan for free.
+ *
+ * Once a gateway (Flutterwave / MTN MoMo / Airtel Money) is integrated, the
+ * checkout webhook — not the client request — should be what calls this path.
+ */
 export async function POST(request: Request) {
-  const auth = await requireAuth(request, ['admin', 'school']);
+  const auth = await requireAuth(request, ['admin']);
   if ('response' in auth) return auth.response;
 
   const body = await request.json();
@@ -93,18 +102,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Plan not found or inactive' }, { status: 404 });
   }
 
-  let targetSchoolId = schoolId ? String(schoolId) : null;
-  if (auth.claims.role === 'school') {
-    const school = await prisma.school.findFirst({
-      where: { ownerUserId: auth.claims.sub },
-      select: { id: true },
-    });
-    if (!school) return NextResponse.json({ error: 'School profile not found' }, { status: 404 });
-    targetSchoolId = school.id;
-  }
-
+  const targetSchoolId = schoolId ? String(schoolId) : null;
   if (!targetSchoolId) {
     return NextResponse.json({ error: 'schoolId is required' }, { status: 400 });
+  }
+
+  const targetSchool = await prisma.school.findUnique({
+    where: { id: targetSchoolId },
+    select: { id: true },
+  });
+  if (!targetSchool) {
+    return NextResponse.json({ error: 'School not found' }, { status: 404 });
   }
 
   const periodStart = new Date();

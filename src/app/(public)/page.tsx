@@ -7,6 +7,7 @@ import SchoolCard from '@/components/schools/SchoolCard';
 import Reveal from '@/components/public/Reveal';
 import { School } from '@/types';
 import { getSchoolTypeLabel } from '@/utils/helpers';
+import { typeFamily } from '@/lib/taxonomy';
 import { useSiteContent } from '@/context/SiteContentContext';
 import {
   PaletteIcon, BookOpenIcon, AcademicCapIcon, BuildingLibraryIcon, UserGroupSmallIcon,
@@ -16,14 +17,21 @@ import {
 
 export default function HomePage() {
   const [schools, setSchools] = useState<School[]>([]);
+  const [totalSchools, setTotalSchools] = useState(0);
   const [loading, setLoading] = useState(true);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const sc = useSiteContent();
 
   useEffect(() => {
-    fetch('/api/schools?status=active')
+    // The listing endpoint paginates now, so ask for a page big enough to fill the
+    // featured/top-rated/browse sections and take the directory-wide count from
+    // the response total rather than from the length of this page.
+    fetch('/api/schools?status=active&limit=48&sort=rating')
       .then(res => res.json())
-      .then(data => setSchools(data.schools || []))
+      .then(data => {
+        setSchools(data.schools || []);
+        setTotalSchools(typeof data.total === 'number' ? data.total : (data.schools || []).length);
+      })
       .catch(() => setSchools([]))
       .finally(() => setLoading(false));
 
@@ -36,7 +44,12 @@ export default function HomePage() {
   const featuredSchools = schools.filter(s => s.isFeatured).slice(0, 6);
   const topRated = [...schools].sort((a, b) => b.rating - a.rating).slice(0, 4);
   const schoolTypeOrder: School['type'][] = ['daycare', 'kindergarten', 'primary', 'secondary', 'tertiary', 'university'];
-  const schoolTypes = schoolTypeOrder.filter(type => schools.some(s => s.type === type));
+  // A school counts under a tile if *any* of its levels belongs to that family —
+  // matching only the primary `type` hid every school whose secondary level is
+  // stored as secondary_o / secondary_oa.
+  const offersType = (school: School, type: string) =>
+    (school.types?.length ? school.types : [school.type]).some(t => typeFamily(t) === type);
+  const schoolTypes = schoolTypeOrder.filter(type => schools.some(s => offersType(s, type)));
   const averageRating = schools.length > 0
     ? (schools.reduce((sum, s) => sum + s.rating, 0) / schools.length).toFixed(1)
     : '0.0';
@@ -51,7 +64,7 @@ export default function HomePage() {
   } as Record<string, React.ReactNode>;
 
   const statsRow = [
-    { value: `${schools.length}+`, label: sc.stats.schoolsLabel },
+    { value: `${totalSchools}+`, label: sc.stats.schoolsLabel },
     { value: sc.stats.familiesValue, label: sc.stats.familiesLabel },
     { value: averageRating, label: sc.stats.ratingLabel },
     { value: sc.stats.citiesValue, label: sc.stats.citiesLabel },
@@ -197,7 +210,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {(schoolTypes.length ? schoolTypes : schoolTypeOrder).map((type, i) => {
-            const count = schools.filter(s => s.type === type).length;
+            const count = schools.filter(s => offersType(s, type)).length;
             return (
               <Reveal key={type} delay={i * 60}>
                 <Link

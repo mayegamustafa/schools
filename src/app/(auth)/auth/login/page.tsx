@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import PasswordField from '@/components/ui/PasswordField';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -85,26 +86,27 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                autoComplete="email"
                 className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-              />
-            </div>
+            <PasswordField
+              id="login-password"
+              label="Password"
+              required
+              value={password}
+              onChange={setPassword}
+              placeholder="Your password"
+              autoComplete="current-password"
+            />
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" />
                 <span className="text-sm text-text-secondary">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-primary hover:text-primary-dark font-medium">Forgot password?</a>
+              <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary-dark font-medium">
+                Forgot password?
+              </Link>
             </div>
             <button
               type="submit"
