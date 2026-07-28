@@ -87,11 +87,34 @@ browser.
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest (watch) |
 | `npm run test:run` | Vitest once — what CI runs |
+| `npm run admin:create` | Create or promote an admin account (see below) |
+| `npm run check:cloudinary` | Verify Cloudinary credentials with a real upload |
 | `scripts/update-mobile-apk.sh` | Rebuild the Android APK into `public/downloads` |
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, tests, and build on every push
 and PR, plus a separate job that applies migrations against a real PostgreSQL service
 and checks the schema still matches them.
+
+## Admin access
+
+Admin accounts are created with a dedicated script rather than the seed —
+`prisma db seed` truncates every table first, so using it to recover access
+would destroy the data it was meant to rescue.
+
+```bash
+# Against production (Railway injects the real DATABASE_URL)
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='StrongPass1' \
+  railway run npm run admin:create
+```
+
+It creates the account, or promotes an existing user and resets their password.
+Only that one row is touched. Then sign in at `/auth/login`.
+
+## Moderating listings
+
+A newly registered school is created with `status: "pending"` and does **not**
+appear in search, on the homepage, or in the sitemap until an admin approves it
+at `/admin/schools`. The owner sees a notice explaining this on their dashboard.
 
 ## Deploying
 
