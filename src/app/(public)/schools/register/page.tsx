@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
 import LocationAutocomplete from '@/components/schools/LocationAutocomplete';
 import ImageUploadField from '@/components/schools/ImageUploadField';
@@ -23,26 +22,9 @@ interface SelectOption {
   label: string;
 }
 
-interface SchoolOptionsResponse {
-  types: SelectOption[];
-  categories: SelectOption[];
-  genders: SelectOption[];
-  facilities: string[];
-}
-
-const optionsFetcher = async (url: string) => {
-  const res = await fetch(url);
-  const payload = await res.json();
-  if (!res.ok) throw new Error(payload.error || 'Failed to load school options');
-  return payload as SchoolOptionsResponse;
-};
-
 export default function RegisterSchoolPage() {
   const router = useRouter();
   const { showToast, token, user, setUser, setToken } = useApp();
-  const { data: optionsData } = useSWR('/api/schools/options', optionsFetcher, {
-    revalidateOnFocus: false,
-  });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
@@ -66,9 +48,12 @@ export default function RegisterSchoolPage() {
     value,
     label: getSchoolTypeLabel(value),
   }));
-  const schoolCategories = optionsData?.categories || [];
-  const schoolGenders = optionsData?.genders || [];
-  const facilities = optionsData?.facilities || [];
+  // Always the canonical lists, never derived from existing listings: this form
+  // is about what a school *can* be. The filter sidebar is the opposite — it
+  // derives from what schools actually are, so it only offers useful filters.
+  const schoolCategories = DEFAULT_CATEGORY_OPTIONS;
+  const schoolGenders = DEFAULT_GENDER_OPTIONS;
+  const facilities = DEFAULT_FACILITIES;
 
   const update = (field: string, value: string | string[]) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -427,8 +412,9 @@ export default function RegisterSchoolPage() {
                 <select required value={form.category} onChange={e => update('category', e.target.value)}
                   className={`${inputClass('category')} bg-surface`}>
                   <option value="">Select category</option>
-                  {(schoolCategories.length ? schoolCategories : DEFAULT_CATEGORY_OPTIONS)
-                    .map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  {schoolCategories.map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
                 </select>
                 <FieldError field="category" />
               </div>
@@ -436,8 +422,9 @@ export default function RegisterSchoolPage() {
                 <label className="block text-sm font-medium text-text-primary mb-2">Gender Mode *</label>
                 <select required value={form.gender} onChange={e => update('gender', e.target.value)}
                   className={`${inputClass('gender')} bg-surface`}>
-                  {(schoolGenders.length ? schoolGenders : DEFAULT_GENDER_OPTIONS)
-                    .map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+                  {schoolGenders.map(g => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -733,7 +720,7 @@ export default function RegisterSchoolPage() {
             <div>
               <label className="block text-sm font-medium text-text-primary mb-3">Facilities</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {(facilities.length ? facilities : [...DEFAULT_FACILITIES]).map(f => (
+                {facilities.map(f => (
                   <label key={f} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
                     form.facilities.includes(f) ? 'bg-primary/5 border-primary/30 text-primary' : 'border-border text-text-secondary hover:bg-hover'
                   }`}>
