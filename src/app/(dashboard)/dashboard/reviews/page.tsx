@@ -21,8 +21,8 @@ interface SchoolInfo {
   status: string;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed');
   return data;
@@ -47,12 +47,12 @@ export default function DashboardReviewsPage() {
   const { token } = useApp();
 
   const { data: schoolData } = useSWR<SchoolInfo>(
-    token ? ['/api/dashboard/info', token] : null,
+    token ? '/api/dashboard/info' : null,
     fetcher
   );
 
   const { data: reviewData, isLoading, error } = useSWR<{ reviews: Review[]; total: number }>(
-    token && schoolData?.id ? [`/api/reviews?schoolId=${schoolData.id}`, token] : null,
+    token && schoolData?.id ? `/api/reviews?schoolId=${schoolData.id}` : null,
     fetcher,
     { refreshInterval: 60000 }
   );

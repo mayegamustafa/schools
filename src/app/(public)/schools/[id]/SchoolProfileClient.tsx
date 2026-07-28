@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { School, Review } from '@/types';
 import { StarRating } from '@/components/ui/StarRating';
+import { trackContact } from '@/components/schools/ViewTracker';
 import { FALLBACK_LOGO_IMAGE, formatCurrency, getSchoolTypesLabel, getSchoolCategoryLabel, getSchoolGenderLabel, getSchoolTypeColor, formatDate, sanitizeImageSrc } from '@/utils/helpers';
 import {
   TruckIcon, BookOpenIcon, BeakerIcon, ComputerDesktopIcon, TrophyIcon,
@@ -30,26 +31,40 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationError, setLocationError] = useState('');
+  const [locatingUser, setLocatingUser] = useState(false);
   const [subject, setSubject] = useState('Admission inquiry');
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', content: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
+  /**
+   * Location is requested on demand, not on page load.
+   *
+   * Prompting the moment someone opens a school page — before they have asked
+   * for anything — is the classic way to get a permanent "Block", which then
+   * breaks directions for that user on every school thereafter.
+   */
+  const requestDirections = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Directions are not supported on this device.');
+      return;
+    }
 
+    setLocatingUser(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setUserLocation({ latitude: coords.latitude, longitude: coords.longitude });
         setLocationError('');
+        setLocatingUser(false);
       },
       () => {
-        setLocationError('Enable location services to get routes from your current position.');
+        setLocationError('Could not get your location. You can still open the school in Maps.');
+        setLocatingUser(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, []);
+  };
 
   const isFavorited = favorites.includes(school.id);
   const hasSchoolCoords = Number.isFinite(school.location.latitude)
@@ -86,7 +101,7 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
     try {
       const res = await fetch('/api/reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ schoolId: school.id, rating: reviewForm.rating, title: reviewForm.title.trim(), content: reviewForm.content.trim() }),
       });
       const payload = await res.json();
@@ -109,7 +124,6 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
       const res = await fetch('/api/conversations', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -285,7 +299,7 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
                           >
                             Open in Google Maps
                           </a>
-                          {mapsRouteLink && (
+                          {mapsRouteLink ? (
                             <a
                               href={mapsRouteLink}
                               target="_blank"
@@ -294,6 +308,15 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
                             >
                               Route from your location
                             </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={requestDirections}
+                              disabled={locatingUser}
+                              className="px-3.5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-60"
+                            >
+                              {locatingUser ? 'Locating…' : 'Get directions from me'}
+                            </button>
                           )}
                           {school.contact.website && (
                             <a
@@ -497,7 +520,7 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
             <div className="bg-white rounded-2xl border border-border p-6 sticky top-24">
               <h3 className="text-lg font-semibold text-text-primary mb-4">Contact School</h3>
               <div className="space-y-3 mb-6">
-                <a href={`tel:${school.contact.phone}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                <a href={`tel:${school.contact.phone}`} onClick={() => trackContact(school.id)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                     <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -520,7 +543,7 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
                   </div>
                 </a>
                 {school.contact.website && (
-                  <a href={school.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  <a href={school.contact.website} target="_blank" rel="noopener noreferrer" onClick={() => trackContact(school.id)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                     <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -536,6 +559,7 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
               {school.contact.whatsapp && (
                 <a
                   href={`https://wa.me/${school.contact.whatsapp.replace(/[^0-9]/g, '')}`}
+                  onClick={() => trackContact(school.id)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary-dark transition-colors"

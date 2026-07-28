@@ -55,7 +55,7 @@ export default function LocationAutocomplete({ value, onChange, onSelect, placeh
     }
     setLoading(true);
     fetch(
-      `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=ug&addressdetails=1&limit=6&q=${encodeURIComponent(q)}`,
+      `/api/geocode?q=${encodeURIComponent(q)}`,
       { headers: { Accept: 'application/json' } }
     )
       .then(r => r.json())

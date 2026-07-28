@@ -26,8 +26,8 @@ interface SupportResponse {
   summary: { openCount: number; resolvedCount: number; urgentCount: number };
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to load');
   return data as SupportResponse;
@@ -63,7 +63,7 @@ export default function AdminSupportPage() {
   if (q) params.set('q', q);
 
   const { data, error, isLoading, mutate } = useSWR(
-    token ? [`/api/admin/support?${params}`, token] : null,
+    token ? `/api/admin/support?${params}` : null,
     fetcher,
     { refreshInterval: 30000 }
   );
@@ -79,7 +79,7 @@ export default function AdminSupportPage() {
     try {
       const res = await fetch(`/api/admin/support/${selected.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus || selected.status, adminNote }),
       });
       if (!res.ok) throw new Error();

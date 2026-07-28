@@ -19,9 +19,8 @@ interface UsersResponse {
   pages: number;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
   });
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load users');
@@ -49,10 +48,7 @@ export default function AdminUsersPage() {
     try {
       const res = await fetch(`/api/users/${targetUserId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: nextRole }),
       });
 
@@ -80,7 +76,7 @@ export default function AdminUsersPage() {
     try {
       const res = await fetch(`/api/users/${pwModal.userId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: newPw }),
       });
       const payload = await res.json();
@@ -105,7 +101,6 @@ export default function AdminUsersPage() {
       const res = await fetch(`/api/users/${targetUserId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 

@@ -38,9 +38,8 @@ interface SupportTicketsResponse {
   };
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
   });
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load report data');
@@ -65,10 +64,7 @@ export default function AdminReportsPage() {
     try {
       const res = await fetch(`/api/admin/support/${ticketId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 

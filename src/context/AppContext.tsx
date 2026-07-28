@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode, useSyncExternalStore } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode, useSyncExternalStore } from 'react';
 import { User, SearchFilters } from '@/types';
 
 interface AppState {
@@ -72,15 +72,30 @@ function parseStoredUser(storedUser: string | null): User | null {
   }
 };
 
+/**
+ * Opaque marker meaning "this browser has a session".
+ *
+ * The JWT itself lives only in the httpOnly `sf_token` cookie and is never
+ * readable by JavaScript. It used to be mirrored into localStorage as well,
+ * which meant the cookie's XSS protection bought nothing — any injected script
+ * could lift the token and impersonate the user. Requests now authenticate with
+ * the cookie automatically; this value only gates UI and SWR keys.
+ */
+const SESSION_MARKER = 'active';
+
 const readStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('sf_token');
+  // Presence of the cached user implies a session cookie was issued alongside it.
+  return localStorage.getItem('sf_user') ? SESSION_MARKER : null;
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const storedUser = useSyncExternalStore(subscribeToAuth, readStoredUser, () => null);
   const token = useSyncExternalStore(subscribeToAuth, readStoredToken, () => null);
-  const user = parseStoredUser(storedUser);
+  // Memoised on the raw string: re-parsing on every render produced a new object
+  // identity each time, which changed the context value and re-rendered every
+  // consumer in the tree.
+  const user = useMemo(() => parseStoredUser(storedUser), [storedUser]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [compareList, setCompareList] = useState<string[]>([]);
   const [searchFilters, setSearchFiltersState] = useState<SearchFilters>(defaultFilters);
@@ -105,14 +120,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     emitAuthChange();
   }, []);
 
+  /**
+   * Kept for call-site compatibility, but the JWT is deliberately discarded —
+   * the server already set it as an httpOnly cookie on the same response.
+   */
   const setToken = useCallback((nextToken: string | null) => {
     if (typeof window === 'undefined') return;
 
-    if (nextToken) {
-      localStorage.setItem('sf_token', nextToken);
-    } else {
-      localStorage.removeItem('sf_token');
-    }
+    // Clear any token left in localStorage by an older build.
+    localStorage.removeItem('sf_token');
+    if (!nextToken) localStorage.removeItem('sf_user');
 
     emitAuthChange();
   }, []);
@@ -138,10 +155,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsSearchOpen(false);
   }, []);
 
+  // Hydrate saved schools from the account. They were previously component state
+  // only, so every refresh silently wiped them despite User.favorites existing.
+  useEffect(() => {
+    if (!token) return;
+
+    let active = true;
+    fetch('/api/users')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (active && Array.isArray(data?.user?.favorites)) setFavorites(data.user.favorites);
+      })
+      .catch(() => {});
+
+    return () => { active = false; };
+  }, [token]);
+
   const toggleFavorite = useCallback((schoolId: string) => {
-    setFavorites(prev =>
-      prev.includes(schoolId) ? prev.filter(id => id !== schoolId) : [...prev, schoolId]
-    );
+    setFavorites(prev => {
+      const next = prev.includes(schoolId)
+        ? prev.filter(id => id !== schoolId)
+        : [...prev, schoolId];
+
+      // Optimistic locally, persisted in the background; a failed write just
+      // means the list reverts on next load rather than blocking the tap.
+      void fetch('/api/users/favorites', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ favorites: next }),
+      }).catch(() => {});
+
+      return next;
+    });
   }, []);
 
   const addToCompare = useCallback((schoolId: string) => {

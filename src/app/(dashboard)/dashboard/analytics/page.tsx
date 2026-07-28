@@ -14,13 +14,14 @@ interface AnalyticsPayload {
     messagesTrend: number;
   };
   analytics: {
-    topSearchTerms: Array<{ term: string; views: number }>;
+    topReferrers: Array<{ term: string; views: number }>;
     visitorSources: Array<{ source: string; pct: number }>;
+    hasData: boolean;
   };
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load analytics');
   return payload as AnalyticsPayload;
@@ -30,7 +31,7 @@ export default function DashboardAnalyticsPage() {
   const { token } = useApp();
 
   const { data, error, isLoading } = useSWR(
-    token ? ['/api/dashboard', token] : null,
+    token ? '/api/dashboard' : null,
     fetcher,
     { refreshInterval: 30000 }
   );
@@ -82,12 +83,14 @@ export default function DashboardAnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-surface rounded-2xl border border-border p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Top Search Terms</h2>
-          {data.analytics.topSearchTerms.length === 0 ? (
-            <p className="text-sm text-text-secondary">No search term data yet.</p>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Top Referrers</h2>
+          {data.analytics.topReferrers.length === 0 ? (
+            <p className="text-sm text-text-secondary">
+              No referral traffic recorded yet. Sites that link to your profile will appear here.
+            </p>
           ) : (
             <div className="space-y-3">
-              {data.analytics.topSearchTerms.map(term => (
+              {data.analytics.topReferrers.map(term => (
                 <div key={term.term}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-text-primary">{term.term}</span>
@@ -107,6 +110,11 @@ export default function DashboardAnalyticsPage() {
 
         <div className="bg-surface rounded-2xl border border-border p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Visitor Sources</h2>
+          {data.analytics.visitorSources.length === 0 ? (
+            <p className="text-sm text-text-secondary">
+              No visits recorded yet. This fills in as parents view your profile.
+            </p>
+          ) : (
           <DonutChart
             size={180}
             thickness={28}
@@ -119,6 +127,7 @@ export default function DashboardAnalyticsPage() {
             centerValue="100%"
             formatValue={value => `${value}%`}
           />
+          )}
         </div>
       </div>
     </div>

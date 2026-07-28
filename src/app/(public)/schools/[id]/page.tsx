@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import SchoolProfileClient from './SchoolProfileClient';
+import ViewTracker from '@/components/schools/ViewTracker';
 import { getSchoolByIdOrSlug } from '@/lib/schools';
 import { getSchoolTypesLabel, getSchoolCategoryLabel, formatCurrency } from '@/utils/helpers';
 import { siteUrl } from '@/lib/site-url';
@@ -117,6 +118,7 @@ export default async function SchoolProfilePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <ViewTracker schoolId={school.id} />
       <SchoolProfileClient school={school} initialReviews={reviews} />
     </>
   );

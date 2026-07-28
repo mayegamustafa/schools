@@ -26,9 +26,8 @@ interface AdminOverviewResponse {
   }>;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
   });
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load admin overview');
@@ -39,7 +38,7 @@ export default function AdminOverviewPage() {
   const { token } = useApp();
 
   const { data, error, isLoading } = useSWR(
-    token ? ['/api/admin/overview', token] : null,
+    token ? '/api/admin/overview' : null,
     fetcher,
     { refreshInterval: 30000 }
   );

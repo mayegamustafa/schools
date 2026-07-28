@@ -41,9 +41,8 @@ interface AdminPaymentsResponse {
   };
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
   });
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load payments');
@@ -53,8 +52,8 @@ const fetcher = async ([url, token]: [string, string]) => {
 export default function AdminPaymentsPage() {
   const { token } = useApp();
 
-  const payments = useSWR(token ? ['/api/payments?limit=50', token] : null, fetcher);
-  const summary = useSWR(token ? ['/api/admin/payments?limit=20', token] : null, fetcher);
+  const payments = useSWR(token ? '/api/payments?limit=50' : null, fetcher);
+  const summary = useSWR(token ? '/api/admin/payments?limit=20' : null, fetcher);
 
   if (!token) {
     return (

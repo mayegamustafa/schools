@@ -18,8 +18,33 @@ interface AuthUser {
 }
 
 const DEFAULT_DEV_SECRET = 'schoolfinder-dev-secret-change-in-production';
-const AUTH_SECRET = process.env.AUTH_SECRET || DEFAULT_DEV_SECRET;
-const AUTH_SECRET_KEY = new TextEncoder().encode(AUTH_SECRET);
+
+/**
+ * Falling back to a hardcoded secret in production would let anyone who has read
+ * the source mint a valid admin token. Development keeps the fallback so a fresh
+ * clone runs without setup.
+ */
+function resolveAuthSecret(): string {
+  const configured = process.env.AUTH_SECRET;
+
+  if (!configured || configured === DEFAULT_DEV_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'AUTH_SECRET must be set to a unique random value in production. '
+        + 'Generate one with: openssl rand -hex 32'
+      );
+    }
+    return DEFAULT_DEV_SECRET;
+  }
+
+  if (configured.length < 32 && process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SECRET must be at least 32 characters in production.');
+  }
+
+  return configured;
+}
+
+const AUTH_SECRET_KEY = new TextEncoder().encode(resolveAuthSecret());
 
 export function normalizeRole(role: string | null | undefined): AuthRole {
   if (!role) return 'guest';
@@ -83,18 +108,61 @@ function getCookieToken(request: Request): string | null {
   return null;
 }
 
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Cross-origin write guard.
+ *
+ * Cookie auth plus sameSite: 'lax' blocks the classic cross-site form POST, but
+ * lax still permits some cross-origin requests, and nothing verified the origin.
+ * Requests carrying a Bearer token are exempt: those come from the mobile app,
+ * which has no Origin header and is not subject to CSRF (an attacker cannot make
+ * a victim's app attach its SecureStore token).
+ */
+function isCrossOriginWrite(request: Request): boolean {
+  if (SAFE_METHODS.has(request.method)) return false;
+  if (getBearerToken(request)) return false;
+
+  const origin = request.headers.get('origin');
+  // Same-origin fetches from older browsers may omit Origin entirely.
+  if (!origin) return false;
+
+  try {
+    return new URL(origin).host !== new URL(request.url).host;
+  } catch {
+    return true;
+  }
+}
+
 export async function requireAuth(
   request: Request,
   allowedRoles?: AuthRole[]
 ): Promise<{ claims: AuthClaims } | { response: NextResponse }> {
-  const token = getBearerToken(request) || getCookieToken(request);
-  if (!token) {
+  if (isCrossOriginWrite(request)) {
+    return {
+      response: NextResponse.json({ error: 'Cross-origin request blocked' }, { status: 403 }),
+    };
+  }
+
+  // Try both credentials rather than only the first present one: the mobile app
+  // sends a Bearer token, the web app relies on the httpOnly cookie, and a stale
+  // header shouldn't shadow a valid cookie.
+  const candidates = [getBearerToken(request), getCookieToken(request)].filter(
+    (value): value is string => Boolean(value)
+  );
+
+  if (candidates.length === 0) {
     return {
       response: NextResponse.json({ error: 'Authentication required' }, { status: 401 }),
     };
   }
 
-  const claims = await verifyAuthToken(token);
+  let claims: AuthClaims | null = null;
+  for (const candidate of candidates) {
+    claims = await verifyAuthToken(candidate);
+    if (claims) break;
+  }
+
   if (!claims) {
     return {
       response: NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 }),

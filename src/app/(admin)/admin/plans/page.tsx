@@ -21,8 +21,8 @@ interface PlansResponse {
   plans: Plan[];
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load plans');
   return payload as PlansResponse;
@@ -66,7 +66,6 @@ export default function AdminPlansPage() {
       const res = await fetch('/api/admin/plans', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -99,7 +98,6 @@ export default function AdminPlansPage() {
       const res = await fetch(`/api/plans/${planId}`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(changes),

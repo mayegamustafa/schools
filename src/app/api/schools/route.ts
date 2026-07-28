@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { serializeSchool, slugify } from '@/lib/serialize';
 import { createAuthToken, requireAuth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { emailLayout, isEmailConfigured, sendEmail } from '@/lib/email';
+import { issueToken } from '@/lib/tokens';
+import { siteUrl } from '@/lib/site-url';
 import {
   expandTypeFilter,
   isValidCategory,
@@ -302,6 +305,38 @@ export async function POST(request: Request) {
       path: '/',
       maxAge: 60 * 60 * 24,
     });
+  }
+
+  // Ownership check: mail the school's own contact address. Best-effort — a mail
+  // failure must not roll back a registration the owner just completed.
+  if (isEmailConfigured()) {
+    try {
+      const { raw } = await issueToken({
+        purpose: 'email_verify',
+        email: school.email,
+        userId: claims.sub,
+        schoolId: school.id,
+      });
+
+      await sendEmail({
+        to: school.email,
+        subject: `Verify ${school.name} on SchoolFinder`,
+        text:
+          `A SchoolFinder listing has been created for ${school.name}, using this address as the school's contact.\n\n`
+          + `Confirm it by opening this link (valid for 7 days):\n\n`
+          + `${siteUrl()}/schools/verify?token=${encodeURIComponent(raw)}\n\n`
+          + `If you did not expect this, please contact us — someone may be attempting to claim your school.`,
+        html: emailLayout(
+          `Verify ${school.name}`,
+          `<p>A SchoolFinder listing has been created for <strong>${school.name}</strong>, using this address as the school's contact.</p>
+           <p>Confirm it with the button below. The link is valid for 7 days.</p>
+           <p>If you did not expect this, please contact us — someone may be attempting to claim your school.</p>`,
+          { label: 'Verify this school', url: `${siteUrl()}/schools/verify?token=${encodeURIComponent(raw)}` }
+        ),
+      });
+    } catch (error) {
+      console.error('[schools] verification email failed:', error);
+    }
   }
 
   await logAudit(claims.sub, claims.name, 'school.registered', 'school', school.id, {

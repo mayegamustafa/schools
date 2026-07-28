@@ -69,8 +69,8 @@ const emptyForm: ProfileForm = {
   videos: [],
 };
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load profile');
   return payload as DashboardResponse;
@@ -84,7 +84,7 @@ export default function DashboardProfilePage() {
   const [detectingGps, setDetectingGps] = useState(false);
 
   const { data, error, isLoading, mutate } = useSWR(
-    token ? ['/api/dashboard', token] : null,
+    token ? '/api/dashboard' : null,
     fetcher
   );
 
@@ -132,7 +132,7 @@ export default function DashboardProfilePage() {
 
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+            `/api/geocode?mode=reverse&lat=${latitude}&lon=${longitude}`
           );
           const payload = await response.json();
           const address = payload.address || {};
@@ -172,7 +172,6 @@ export default function DashboardProfilePage() {
 
       const res = await fetch('/api/uploads', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -229,10 +228,7 @@ export default function DashboardProfilePage() {
     try {
       const res = await fetch(`/api/schools/${data.school.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           shortDescription: form.shortDescription,

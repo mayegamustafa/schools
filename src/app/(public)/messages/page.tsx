@@ -6,8 +6,8 @@ import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
 import { Conversation } from '@/types';
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to load conversations');
   return payload;
@@ -17,7 +17,7 @@ export default function UserMessagesPage() {
   const { token, user, showToast } = useApp();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const { data, error, isLoading, mutate } = useSWR(token ? ['/api/conversations', token] : null, fetcher, {
+  const { data, error, isLoading, mutate } = useSWR(token ? '/api/conversations' : null, fetcher, {
     refreshInterval: 15000,
   });
 
@@ -28,7 +28,7 @@ export default function UserMessagesPage() {
   }, [activeConversationId, data]);
 
   const { data: threadData, mutate: mutateThread } = useSWR(
-    token && activeConversationId ? [`/api/conversations/${activeConversationId}`, token] : null,
+    token && activeConversationId ? `/api/conversations/${activeConversationId}` : null,
     fetcher,
     { refreshInterval: 10000 }
   );
@@ -39,7 +39,6 @@ export default function UserMessagesPage() {
       const res = await fetch(`/api/conversations/${activeConversationId}/messages`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ content: draft }),

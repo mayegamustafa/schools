@@ -48,10 +48,9 @@ interface DashboardResponse {
   }>;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -66,7 +65,7 @@ const fetcher = async ([url, token]: [string, string]) => {
 export default function DashboardOverviewPage() {
   const { token } = useApp();
   const { data, error, isLoading } = useSWR(
-    token ? ['/api/dashboard', token] : null,
+    token ? '/api/dashboard' : null,
     fetcher,
     { refreshInterval: 30000 }
   );

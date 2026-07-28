@@ -4,7 +4,8 @@ A school directory for Uganda: parents search, compare, and contact schools; sch
 manage their listing from a dashboard; admins moderate listings, plans, and support.
 
 Next.js 16 (App Router) · Prisma 7 · PostgreSQL · Tailwind v4 · JWT auth (`jose`) ·
-Cloudinary for media. A companion Expo/React Native app lives in a separate repo.
+Cloudinary media · Flutterwave payments · SMTP email. A companion Expo/React Native
+app lives in a separate repo.
 
 ## Getting started
 
@@ -16,45 +17,64 @@ npx prisma db seed            # optional demo data
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. Every variable is documented in `.env.example`.
 
-Every variable in `.env.example` is documented there. Two are load-bearing in
-production:
+**Required to run at all:** `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`,
+and the three `CLOUDINARY_*` values — school registration requires a badge and cover
+photo, so uploads must work.
 
-- **`AUTH_SECRET`** — without it the app falls back to a known development secret,
-  which would let anyone forge an admin session.
-- **`CLOUDINARY_*`** — all school media lives in Cloudinary. Without it, uploads
-  return 503 and schools cannot complete registration (a badge and cover photo are
-  required).
+**Strongly recommended:** `SMTP_*`. Without it, password reset degrades to a support
+ticket an admin actions by hand, and school email verification is unavailable.
+
+**Optional:** `FLUTTERWAVE_*`. Until both are set the dashboard offers an "upgrade
+request" instead of a checkout.
 
 ## Layout
 
 ```
 src/app/(public)      Public site — home, listings, school profiles, city pages
-src/app/(auth)        Sign in, sign up, password recovery
+src/app/(auth)        Sign in, sign up, password reset
 src/app/(dashboard)   School owner dashboard
 src/app/(admin)       Admin console
 src/app/api           Route handlers
-src/lib               prisma, auth, taxonomy, cloudinary, rate-limit, serialize
+src/lib               prisma, auth, taxonomy, cloudinary, email, tokens,
+                      flutterwave, rate-limit, serialize
 src/proxy.ts          Middleware — guards /dashboard and /admin by role
 prisma/               Schema, migrations, seed
 ```
 
-### Things worth knowing
+## Things worth knowing
 
-- **School levels.** A school can offer several levels at once, held in
-  `School.types` (`primary`, `secondary_oa`, …). `School.type` keeps the primary
-  level for display. Validation and grouping live in `src/lib/taxonomy.ts` — add new
-  levels there, not inline in route handlers.
-- **Search.** `contains` filters must pass `mode: 'insensitive'`; PostgreSQL `LIKE`
-  is case-sensitive, so omitting it silently breaks search.
-- **Media.** Uploads go through `/api/uploads` to Cloudinary. `schoolId` is optional
-  so the registration form can upload before the school row exists.
-- **Rate limiting** (`src/lib/rate-limit.ts`) is in-process, so each instance keeps
-  its own counters. Move it to Redis before scaling horizontally.
-- **Payments are not wired up.** Subscription and payment writes are admin-only on
-  purpose; connect a gateway (Flutterwave / MTN MoMo / Airtel Money) and drive them
-  from its webhook rather than from a client request.
+**Auth.** The browser authenticates with an httpOnly cookie only — the JWT is never
+in `localStorage`, and client code sends no `Authorization` header. The mobile app
+uses Bearer tokens from SecureStore, so the API accepts both. `AUTH_SECRET` is
+enforced at boot in production; there is no silent dev-secret fallback.
+
+**School levels.** A school can offer several at once, held in `School.types`
+(`primary`, `secondary_oa`, …); `School.type` keeps the primary level for display.
+All validation and grouping lives in `src/lib/taxonomy.ts` — add new levels there,
+never inline in a route handler.
+
+**Search.** `contains` filters must pass `mode: 'insensitive'`. PostgreSQL `LIKE` is
+case-sensitive, so omitting it silently breaks search.
+
+**Media.** Uploads go through `/api/uploads` to Cloudinary. `schoolId` is optional so
+registration can upload before the school row exists.
+
+**Payments.** A subscription can only be activated by `/api/payments/webhook`, after
+the transaction is re-verified against Flutterwave's API and the amount checked
+against the plan. No client request can grant a plan. Register the webhook URL as
+`https://your-domain.com/api/payments/webhook`.
+
+**Analytics** are real events in `SchoolView`, deduplicated per visitor per school
+per day via a salted daily hash of IP + user agent. Nothing identifying is stored.
+
+**Rate limiting** (`src/lib/rate-limit.ts`) is in-process, so each instance keeps its
+own counters. Move it to Redis before scaling horizontally.
+
+**Geocoding** goes through `/api/geocode`, which adds the identifying User-Agent and
+request spacing OpenStreetMap's usage policy requires. Never call Nominatim from the
+browser.
 
 ## Scripts
 
@@ -64,10 +84,16 @@ prisma/               Schema, migrations, seed
 | `npm run build` | `prisma generate` + production build |
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
-| `npx tsc --noEmit` | Type check |
-| `scripts/update-mobile-apk.sh` | Rebuild the Android APK and publish it to `public/downloads` |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest (watch) |
+| `npm run test:run` | Vitest once — what CI runs |
+| `scripts/update-mobile-apk.sh` | Rebuild the Android APK into `public/downloads` |
+
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, tests, and build on every push
+and PR, plus a separate job that applies migrations against a real PostgreSQL service
+and checks the schema still matches them.
 
 ## Deploying
 
-Railway. Set the environment variables above, run `npx prisma migrate deploy` against
-the production database, then deploy.
+Railway. Set the environment variables, run `npx prisma migrate deploy` against the
+production database, then deploy.

@@ -88,7 +88,7 @@ function SchoolsResults({ initialFilters }: { initialFilters: SearchFilters }) {
     const loadArea = async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${filters.latitude}&lon=${filters.longitude}`,
+          `/api/geocode?mode=reverse&lat=${filters.latitude}&lon=${filters.longitude}`,
           { signal: controller.signal }
         );
         if (!res.ok) {

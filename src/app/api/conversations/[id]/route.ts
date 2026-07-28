@@ -76,7 +76,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       lastMessageAt: conversation.lastMessageAt.toISOString(),
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString(),
-      unreadCount: conversation.messages.filter(message => !message.isRead).length,
+      // Only the other party's unread messages count towards the badge.
+      unreadCount: conversation.messages.filter(
+        message => !message.isRead && message.senderId !== auth.claims.sub
+      ).length,
       messages: conversation.messages.map(message => ({
         id: message.id,
         conversationId: message.conversationId,

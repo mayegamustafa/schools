@@ -55,27 +55,21 @@ export async function GET(request: Request) {
   const prev30 = new Date(now.getTime() - 1000 * 60 * 60 * 24 * 60);
 
   const [
-    recentReviewCount,
-    previousReviewCount,
     recentLeadCount,
     previousLeadCount,
     totalLeadCount,
     reviews,
     leads,
     payments,
+    totalViews,
+    totalClicks,
+    recentViewCount,
+    previousViewCount,
+    recentClickCount,
+    previousClickCount,
+    viewsBySource,
+    topReferrerRows,
   ] = await Promise.all([
-    prisma.review.count({
-      where: {
-        schoolId: school.id,
-        createdAt: { gte: last30 },
-      },
-    }),
-    prisma.review.count({
-      where: {
-        schoolId: school.id,
-        createdAt: { gte: prev30, lt: last30 },
-      },
-    }),
     prisma.lead.count({
       where: {
         schoolId: school.id,
@@ -104,22 +98,51 @@ export async function GET(request: Request) {
       orderBy: { paidAt: 'desc' },
       take: 12,
     }),
+    prisma.schoolView.count({ where: { schoolId: school.id, kind: 'profile' } }),
+    prisma.schoolView.count({ where: { schoolId: school.id, kind: 'contact' } }),
+    prisma.schoolView.count({
+      where: { schoolId: school.id, kind: 'profile', createdAt: { gte: last30 } },
+    }),
+    prisma.schoolView.count({
+      where: { schoolId: school.id, kind: 'profile', createdAt: { gte: prev30, lt: last30 } },
+    }),
+    prisma.schoolView.count({
+      where: { schoolId: school.id, kind: 'contact', createdAt: { gte: last30 } },
+    }),
+    prisma.schoolView.count({
+      where: { schoolId: school.id, kind: 'contact', createdAt: { gte: prev30, lt: last30 } },
+    }),
+    prisma.schoolView.groupBy({
+      by: ['source'],
+      where: { schoolId: school.id, kind: 'profile' },
+      _count: { _all: true },
+    }),
+    prisma.schoolView.groupBy({
+      by: ['referrer'],
+      where: { schoolId: school.id, kind: 'profile', referrer: { not: null } },
+      _count: { _all: true },
+      orderBy: { _count: { referrer: 'desc' } },
+      take: 8,
+    }),
   ]);
 
-  const totalViews = school.reviewCount * 150 + Math.round(school.rating * 80) + 500;
-  const totalClicks = Math.round(totalViews * 0.14) + recentLeadCount * 3;
+  // Every figure below is a real count from SchoolView. These used to be derived
+  // arithmetically from reviewCount — schools were being shown invented numbers
+  // for the listing they pay for.
   const totalMessages = totalLeadCount;
 
-  const viewsTrend = percentChange(recentReviewCount * 150 + 1, previousReviewCount * 150 + 1);
-  const clicksTrend = percentChange(Math.round(recentReviewCount * 20) + recentLeadCount + 1, Math.round(previousReviewCount * 20) + previousLeadCount + 1);
-  const messagesTrend = percentChange(recentLeadCount + 1, previousLeadCount + 1);
+  const viewsTrend = percentChange(recentViewCount, previousViewCount);
+  const clicksTrend = percentChange(recentClickCount, previousClickCount);
+  const messagesTrend = percentChange(recentLeadCount, previousLeadCount);
 
   const recentActivity = [
-    {
-      type: 'view',
-      message: `Your profile has ${totalViews} cumulative views.`,
-      time: timeAgo(school.updatedAt),
-    },
+    ...(totalViews > 0
+      ? [{
+          type: 'view',
+          message: `Your profile has ${totalViews} view${totalViews === 1 ? '' : 's'}.`,
+          time: timeAgo(school.updatedAt),
+        }]
+      : []),
     ...leads.slice(0, 4).map(lead => ({
       type: 'message',
       message: `New inquiry from ${lead.name}.`,
@@ -149,27 +172,39 @@ export async function GET(request: Request) {
     status: payment.status,
   }));
 
-  const topSearchTerms = [
-    { term: school.name, views: totalViews },
-    { term: `${school.type} schools ${school.city}`, views: Math.round(totalViews * 0.65) },
-    { term: `${school.city} schools`, views: Math.round(totalViews * 0.45) },
-    { term: `${school.category} ${school.type}`, views: Math.round(totalViews * 0.32) },
-  ];
-
-  const sourceWeights = {
-    direct: Math.max(1, Math.round(totalViews * 0.48)),
-    google: Math.max(1, recentReviewCount * 25 + Math.round(totalClicks * 0.22)),
-    social: Math.max(1, Math.round(totalClicks * 0.12)),
-    referrals: Math.max(1, totalLeadCount * 8),
+  const sourceLabels: Record<string, string> = {
+    direct: 'Direct',
+    search: 'Search engines',
+    social: 'Social media',
+    referral: 'Referrals',
   };
-  const sourceTotal = sourceWeights.direct + sourceWeights.google + sourceWeights.social + sourceWeights.referrals;
 
-  const visitorSources = [
-    { source: 'Direct Search', pct: Math.round((sourceWeights.direct / sourceTotal) * 100) },
-    { source: 'Google', pct: Math.round((sourceWeights.google / sourceTotal) * 100) },
-    { source: 'Social Media', pct: Math.round((sourceWeights.social / sourceTotal) * 100) },
-    { source: 'Referrals', pct: Math.round((sourceWeights.referrals / sourceTotal) * 100) },
-  ];
+  // Real referrer breakdown. Returns an empty array until traffic exists, rather
+  // than inventing a plausible-looking split.
+  const sourceTotal = viewsBySource.reduce((sum, row) => sum + row._count._all, 0);
+  const visitorSources = sourceTotal === 0
+    ? []
+    : viewsBySource
+        .map(row => ({
+          source: sourceLabels[row.source] || row.source,
+          pct: Math.round((row._count._all / sourceTotal) * 100),
+        }))
+        .sort((a, b) => b.pct - a.pct);
+
+  // Referring pages that actually sent traffic, in place of the fabricated
+  // "top search terms" list. Real query terms would need Search Console.
+  const topReferrers = topReferrerRows
+    .filter(row => row.referrer)
+    .map(row => {
+      let label = row.referrer as string;
+      try {
+        label = new URL(label).hostname.replace(/^www\./, '');
+      } catch {
+        // Keep the raw value if it isn't a parseable URL.
+      }
+      return { term: label, views: row._count._all };
+    })
+    .slice(0, 5);
 
   return NextResponse.json({
     school: {
@@ -205,8 +240,11 @@ export async function GET(request: Request) {
     subscription,
     paymentHistory,
     analytics: {
-      topSearchTerms,
+      topReferrers,
       visitorSources,
+      /** True once any real traffic has been recorded, so the UI can show an
+       *  honest empty state instead of zeros that look like a bug. */
+      hasData: totalViews > 0,
     },
   });
 }

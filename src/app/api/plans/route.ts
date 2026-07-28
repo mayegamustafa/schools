@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isPaymentsConfigured } from '@/lib/flutterwave';
 
 function parseFeatures(features: string): string[] {
   try {
@@ -32,5 +33,8 @@ export async function GET(request: Request) {
       features: parseFeatures(plan.features),
       isFeatured: plan.isFeatured,
     })),
+    // Lets the dashboard offer real checkout, or fall back to an upgrade request
+    // when no gateway is connected yet.
+    paymentsEnabled: isPaymentsConfigured(),
   });
 }

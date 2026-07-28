@@ -36,6 +36,7 @@ interface PaymentResponse {
 }
 
 interface PlansResponse {
+  paymentsEnabled: boolean;
   plans: Array<{
     id: string;
     name: string;
@@ -47,8 +48,8 @@ interface PlansResponse {
   }>;
 }
 
-const authFetcher = async <T,>([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const authFetcher = async <T,>(url: string) => {
+  const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) throw new Error(payload.error || 'Failed to fetch resource');
   return payload as T;
@@ -58,28 +59,50 @@ export default function DashboardSubscriptionPage() {
   const { token, user, showToast } = useApp();
   const [updatingPlanId, setUpdatingPlanId] = useState<string | null>(null);
 
-  const subscriptions = useSWR(token ? ['/api/subscriptions', token] : null, authFetcher<SubscriptionResponse>);
-  const payments = useSWR(token ? ['/api/payments?limit=20', token] : null, authFetcher<PaymentResponse>);
-  const plans = useSWR(token ? ['/api/plans', token] : null, authFetcher<PlansResponse>);
+  const subscriptions = useSWR(token ? '/api/subscriptions' : null, authFetcher<SubscriptionResponse>);
+  const payments = useSWR(token ? '/api/payments?limit=20' : null, authFetcher<PaymentResponse>);
+  const plans = useSWR(token ? '/api/plans' : null, authFetcher<PlansResponse>);
 
   const currentSubscription = subscriptions.data?.subscriptions[0] || null;
+  const paymentsEnabled = plans.data?.paymentsEnabled ?? false;
 
   /**
-   * Plans are activated by an admin after payment is confirmed — the client can't
-   * grant itself a paid plan. This raises a request the admin sees in the support
-   * queue; swap it for a real checkout once a payment gateway is connected.
+   * Two paths, depending on deployment:
+   *
+   * With a gateway configured, this starts a real Flutterwave checkout — the
+   * plan is activated only by the verified webhook, never by the client.
+   * Without one, it raises an upgrade request in the support queue so the flow
+   * still works while payments are being set up.
    */
-  const requestPlan = async (planId: string, planName: string) => {
+  const choosePlan = async (planId: string, planName: string) => {
     if (!token || !user) return;
 
     setUpdatingPlanId(planId);
+
+    if (paymentsEnabled) {
+      try {
+        const res = await fetch('/api/payments/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId }),
+        });
+
+        const payload = await res.json();
+        if (!res.ok) throw new Error(payload.error || 'Could not start the payment');
+
+        window.location.href = payload.checkoutUrl;
+        return;
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : 'Could not start the payment', 'error');
+        setUpdatingPlanId(null);
+        return;
+      }
+    }
+
     try {
       const res = await fetch('/api/admin/support', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           submitterName: user.name,
           submitterEmail: user.email,
@@ -176,10 +199,14 @@ export default function DashboardSubscriptionPage() {
                 <button
                   type="button"
                   disabled={isCurrent || updatingPlanId === plan.id}
-                  onClick={() => requestPlan(plan.id, plan.name)}
+                  onClick={() => choosePlan(plan.id, plan.name)}
                   className={`w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isCurrent ? 'bg-hover text-text-muted cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark'}`}
                 >
-                  {isCurrent ? 'Current Plan' : updatingPlanId === plan.id ? 'Sending…' : 'Request Upgrade'}
+                  {isCurrent
+                    ? 'Current Plan'
+                    : updatingPlanId === plan.id
+                      ? (paymentsEnabled ? 'Redirecting…' : 'Sending…')
+                      : (paymentsEnabled ? 'Choose Plan' : 'Request Upgrade')}
                 </button>
               </div>
             );

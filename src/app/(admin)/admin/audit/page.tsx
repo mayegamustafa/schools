@@ -22,8 +22,8 @@ interface AuditResponse {
   pages: number;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to load');
   return data as AuditResponse;
@@ -57,7 +57,7 @@ export default function AdminAuditPage() {
   if (q) params.set('q', q);
 
   const { data, error, isLoading } = useSWR(
-    token ? [`/api/admin/audit-logs?${params}`, token] : null,
+    token ? `/api/admin/audit-logs?${params}` : null,
     fetcher,
     { refreshInterval: 60000 }
   );

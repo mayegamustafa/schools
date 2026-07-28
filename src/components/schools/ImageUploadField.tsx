@@ -58,7 +58,6 @@ export default function ImageUploadField({
 
       const res = await fetch('/api/uploads', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body,
       });
 

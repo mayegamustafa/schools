@@ -3,6 +3,20 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
+/**
+ * Unread means "sent by the other party and not yet read".
+ *
+ * This previously counted every unread message including the viewer's own
+ * outbound ones, which stay unread until the recipient opens them — so a school
+ * saw a phantom badge immediately after replying.
+ */
+function countUnread(
+  messages: Array<{ senderId: string; isRead: boolean }>,
+  viewerId: string
+): number {
+  return messages.filter(message => !message.isRead && message.senderId !== viewerId).length;
+}
+
 function serializeConversation(conversation: {
   id: string;
   schoolId: string;
@@ -23,7 +37,7 @@ function serializeConversation(conversation: {
     createdAt: Date;
     sender: { name: string };
   }>;
-}) {
+}, viewerId: string) {
   const lastMessage = conversation.messages[0];
 
   return {
@@ -39,7 +53,7 @@ function serializeConversation(conversation: {
     lastMessageAt: conversation.lastMessageAt.toISOString(),
     createdAt: conversation.createdAt.toISOString(),
     updatedAt: conversation.updatedAt.toISOString(),
-    unreadCount: conversation.messages.filter(message => !message.isRead).length,
+    unreadCount: countUnread(conversation.messages, viewerId),
     lastMessage: lastMessage
       ? {
           id: lastMessage.id,
@@ -95,7 +109,7 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    conversations: conversations.map(serializeConversation),
+    conversations: conversations.map(c => serializeConversation(c, auth.claims.sub)),
   });
 }
 
@@ -163,5 +177,8 @@ export async function POST(request: Request) {
     subject: conversation.subject,
   });
 
-  return NextResponse.json({ conversation: serializeConversation(conversation) }, { status: 201 });
+  return NextResponse.json(
+    { conversation: serializeConversation(conversation, auth.claims.sub) },
+    { status: 201 }
+  );
 }

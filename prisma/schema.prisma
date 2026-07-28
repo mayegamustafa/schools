@@ -44,6 +44,9 @@ model School {
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
   isVerified       Boolean  @default(false)
+  /// True once someone has clicked the link sent to the school's contact email.
+  /// Distinct from isVerified, which is the admin's manual trust badge.
+  emailVerified    Boolean  @default(false)
   isFeatured       Boolean  @default(false)
   isPremium        Boolean  @default(false)
   status           String   @default("pending")
@@ -54,6 +57,7 @@ model School {
   payments         Payment[]
   subscription     SchoolSubscription?
   conversations    Conversation[]
+  views            SchoolView[]
 
   @@index([status, createdAt])
   @@index([status, rating])
@@ -62,6 +66,28 @@ model School {
   @@index([isFeatured])
   @@index([types], type: Gin)
   @@index([facilities], type: Gin)
+}
+
+/// Real engagement events, replacing the numbers the dashboard used to invent
+/// from reviewCount. `sessionHash` is a salted daily hash of IP + user agent —
+/// enough to deduplicate a refresh without storing anything identifying.
+model SchoolView {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  /// "profile" (page view) or "contact" (phone/WhatsApp/website click)
+  kind        String   @default("profile")
+  source      String   @default("direct")
+  referrer    String?
+  sessionHash String
+  /// UTC date bucket ("2026-07-28"). Paired with sessionHash in the unique key so
+  /// one visitor counts once per school per day no matter how often they refresh.
+  day         String
+  createdAt   DateTime @default(now())
+
+  @@unique([schoolId, kind, sessionHash, day])
+  @@index([schoolId, createdAt])
+  @@index([schoolId, kind, createdAt])
 }
 
 model Review {
@@ -90,6 +116,7 @@ model User {
   schools   School[] @relation("SchoolOwner")
   conversations Conversation[] @relation("ConversationUser")
   messages  Message[]
+  verificationTokens VerificationToken[]
 }
 
 model Conversation {
@@ -182,6 +209,26 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+/// Single-use, expiring tokens for password reset and email verification.
+/// Only the SHA-256 hash is stored — a database leak must not hand an attacker
+/// working reset links.
+model VerificationToken {
+  id        String    @id @default(cuid())
+  /// "password_reset" | "email_verify"
+  purpose   String
+  tokenHash String    @unique
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
 }
 
 model AuditLog {

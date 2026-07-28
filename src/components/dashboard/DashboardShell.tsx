@@ -108,7 +108,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     if (user.role !== 'school') { router.push('/'); return; }
 
     fetch('/api/dashboard/info', {
-      headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     })
       .then(r => r.json())
@@ -121,7 +120,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       .catch(() => {});
 
     fetch('/api/notifications', {
-      headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     })
       .then(r => r.json())
@@ -146,7 +144,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     if (!token) return;
     await fetch('/api/notifications', {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ markAll: true }),
     });
     setUnread(0);
@@ -199,7 +197,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <div className="mx-3 my-3 rounded-xl border border-border bg-gradient-to-br from-card to-hover px-3 py-2.5">
           <p className="text-xs font-semibold text-text-primary truncate">{activeSchool.name}</p>
           <div className="flex items-center gap-1.5 mt-1">
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSchool.status === 'approved' || activeSchool.status === 'active' ? 'bg-success' : 'bg-accent'}`}/>
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSchool.status === 'active' ? 'bg-success' : 'bg-accent'}`}/>
             <span className="text-xs text-text-muted capitalize">{activeSchool.status}</span>
             {activeSchool.isVerified && <span className="text-xs text-success font-medium">· Verified</span>}
           </div>
@@ -296,7 +294,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               {school ? (
                 <>
                   <span className="text-sm font-semibold text-text-primary truncate max-w-[200px]">{school.name}</span>
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${school.status === 'approved' || school.status === 'active' ? 'bg-success' : 'bg-accent'}`}/>
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${school.status === 'active' ? 'bg-success' : 'bg-accent'}`}/>
                 </>
               ) : (
                 <span className="text-sm font-semibold text-text-primary">School Dashboard</span>

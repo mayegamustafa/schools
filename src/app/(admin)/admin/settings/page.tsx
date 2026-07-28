@@ -64,13 +64,12 @@ function OptionSection({
 const inputCls = 'w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface text-text-primary';
 
 function ImageUploadField({
-  label, value, onChange, placeholder, token,
+  label, value, onChange, placeholder,
 }: {
   label: string;
   value: string;
   onChange: (url: string) => void;
   placeholder?: string;
-  token: string | null;
 }) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useState<HTMLInputElement | null>(null);
@@ -86,7 +85,6 @@ function ImageUploadField({
       fd.append('kind', file.type.startsWith('video/') ? 'video' : 'image');
       const res = await fetch('/api/admin/uploads', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
       const data = await res.json();
@@ -203,7 +201,7 @@ export default function AdminSettingsPage() {
   const load = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch('/api/admin/settings');
       const data = await res.json();
       setOptions(data.schoolOptions);
       setBrand(data.brandSettings);
@@ -235,7 +233,7 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind: 'options', data: options }),
       });
       if (!res.ok) throw new Error();
@@ -269,7 +267,7 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind: 'brand', data: brand }),
       });
       if (!res.ok) throw new Error();
@@ -287,7 +285,7 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind: 'content', data: content }),
       });
       if (!res.ok) throw new Error();
@@ -496,7 +494,6 @@ export default function AdminSettingsPage() {
                 value={content.logoImageUrl}
                 onChange={url => setContent(p => ({ ...p, logoImageUrl: url }))}
                 placeholder="https://… or click ⬆ Upload"
-                token={token}
               />
             )}
           </ContentCard>
@@ -523,7 +520,6 @@ export default function AdminSettingsPage() {
               value={content.hero.imageUrl}
               onChange={url => setContent(p => ({ ...p, hero: { ...p.hero, imageUrl: url } }))}
               placeholder="https://… or click ⬆ Upload"
-              token={token}
             />
             <Field label="Image Caption">
               <input value={content.hero.imageCaption}

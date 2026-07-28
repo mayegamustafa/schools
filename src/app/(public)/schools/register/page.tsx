@@ -229,7 +229,7 @@ export default function RegisterSchoolPage() {
         }));
 
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+          const res = await fetch(`/api/geocode?mode=reverse&lat=${lat}&lon=${lng}`);
           const data = await res.json();
           const addr = data.address || {};
 
@@ -281,13 +281,12 @@ export default function RegisterSchoolPage() {
     try {
       // Normally created back at step 2; this covers the case where that call
       // failed and the user pushed on anyway.
-      const authToken = await ensureAccount();
+      await ensureAccount();
 
       const res = await fetch('/api/schools', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           name: form.name,

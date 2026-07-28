@@ -26,10 +26,9 @@ interface LeadsResponse {
 
 const statusOptions: Array<LeadRecord['status']> = ['new', 'contacted', 'qualified', 'closed'];
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async (url: string) => {
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -53,10 +52,7 @@ export default function DashboardLeadsPage() {
     try {
       const res = await fetch(`/api/leads/${leadId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
       const payload = await res.json();
