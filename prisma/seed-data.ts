@@ -1,0 +1,440 @@
+/**
+ * Seed fixtures, kept separate from the seed script so they can be validated
+ * without a database connection (see src/lib/__tests__/seed-data.test.ts).
+ *
+ * Several of these are real Ugandan schools. Contact details therefore use the
+ * reserved +256 700 000 0XX range and .demo.ug addresses, so a sample enquiry
+ * can never reach a real admissions office. Fees, ratings, and reviews are
+ * illustrative sample data, not claims about these institutions.
+ */
+
+export interface SeedSchool {
+  id: string;
+  name: string;
+  types: string[];
+  category: string;
+  gender: string;
+  city: string;
+  region: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  shortDescription: string;
+  description: string;
+  dayMin: number;
+  dayMax: number;
+  facilities: string[];
+  rating: number;
+  reviewCount: number;
+  isVerified: boolean;
+  isFeatured: boolean;
+  isPremium: boolean;
+  owned?: boolean;
+  status?: string;
+}
+
+export interface SeedReview {
+  schoolId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  title: string;
+  content: string;
+}
+
+export const seedSchools: SeedSchool[] = [
+    {
+      id: 'sch-1',
+      name: 'Kampala Junior Academy',
+      types: ['primary'],
+      category: 'day',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: '12 Bombo Road, Kampala',
+      latitude: 0.3476,
+      longitude: 32.5825,
+      shortDescription: 'A primary school focused on strong foundations in literacy and numeracy.',
+      description:
+        'Kampala Junior Academy is a day primary school in central Kampala offering the Ugandan national curriculum from Primary One to Primary Seven. Small class sizes allow teachers to track each pupil closely, and the school runs daily reading and numeracy support alongside music, art, and sport.',
+      dayMin: 800000,
+      dayMax: 1500000,
+      facilities: ['Library', 'Computer Lab', 'Sports Field', 'Playground', 'Dining Hall', 'School Bus', 'Security', 'Wi-Fi'],
+      rating: 4.7,
+      reviewCount: 3,
+      isVerified: true,
+      isFeatured: true,
+      isPremium: true,
+      owned: true,
+    },
+    {
+      id: 'sch-2',
+      name: 'City Parents School',
+      types: ['kindergarten', 'primary'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: 'Buganda Road, Kampala',
+      latitude: 0.3220,
+      longitude: 32.5770,
+      shortDescription: 'Long-established Kampala school covering nursery through upper primary.',
+      description:
+        'City Parents School is one of Kampala\'s long-established primary schools, taking children from nursery through to Primary Seven. The school combines the national curriculum with a broad co-curricular programme covering music, dance, drama, debate, and competitive sport, and offers both day and boarding places in the upper classes.',
+      dayMin: 1200000,
+      dayMax: 2200000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dining Hall', 'Boarding Facilities', 'Clinic', 'School Bus', 'Security'],
+      rating: 4.6,
+      reviewCount: 2,
+      isVerified: true,
+      isFeatured: true,
+      isPremium: true,
+      owned: true,
+    },
+    {
+      id: 'sch-3',
+      name: 'Sir Apollo Kaggwa Schools',
+      types: ['kindergarten', 'primary', 'secondary_oa'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: 'Mengo, Kampala',
+      latitude: 0.3010,
+      longitude: 32.5560,
+      shortDescription: 'Multi-campus group running nursery, primary, and O & A level secondary.',
+      description:
+        'Sir Apollo Kaggwa Schools is a multi-campus group offering an unbroken path from nursery through primary to O and A level. Each campus runs the Ugandan national curriculum with a strong sciences and ICT emphasis, and day and boarding options are available at most levels.',
+      dayMin: 1000000,
+      dayMax: 2400000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Music Room', 'Art Room', 'Clinic', 'School Bus', 'Security', 'Wi-Fi'],
+      rating: 4.5,
+      reviewCount: 1,
+      isVerified: true,
+      isFeatured: true,
+      isPremium: false,
+    },
+    {
+      id: 'sch-4',
+      name: 'Gayaza High School',
+      types: ['secondary_oa'],
+      category: 'boarding',
+      gender: 'girls_only',
+      city: 'Wakiso',
+      region: 'Central Region',
+      address: 'Gayaza, Wakiso District',
+      latitude: 0.4283,
+      longitude: 32.6069,
+      shortDescription: 'Girls-only boarding secondary school offering O and A level.',
+      description:
+        'Gayaza High School is a girls-only boarding secondary school in Wakiso District offering both O and A level. The school is known for its academic record in the sciences and humanities, and runs an extensive co-curricular programme including agriculture, music, and competitive sport.',
+      dayMin: 1800000,
+      dayMax: 2800000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Music Room', 'Clinic', 'Chapel / Prayer Room', 'Security'],
+      rating: 4.8,
+      reviewCount: 2,
+      isVerified: true,
+      isFeatured: true,
+      isPremium: true,
+    },
+    {
+      id: 'sch-5',
+      name: "King's College Budo",
+      types: ['secondary_oa'],
+      category: 'boarding',
+      gender: 'mixed',
+      city: 'Wakiso',
+      region: 'Central Region',
+      address: 'Budo Hill, Wakiso District',
+      latitude: 0.2833,
+      longitude: 32.4667,
+      shortDescription: 'Mixed boarding secondary school on Budo Hill offering O and A level.',
+      description:
+        "King's College Budo is a mixed boarding secondary school in Wakiso District offering O and A level under the Ugandan national curriculum. The campus sits on Budo Hill and includes extensive sports grounds, science laboratories, and a long-running house system.",
+      dayMin: 1700000,
+      dayMax: 2600000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dining Hall', 'Boarding Facilities', 'Chapel / Prayer Room', 'Clinic', 'Security'],
+      rating: 4.7,
+      reviewCount: 1,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-6',
+      name: 'Greenhill Academy',
+      types: ['kindergarten', 'primary', 'secondary_o'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: 'Kibuli, Kampala',
+      latitude: 0.3050,
+      longitude: 32.6010,
+      shortDescription: 'Nursery to O level with day and boarding options across several campuses.',
+      description:
+        'Greenhill Academy runs nursery, primary, and lower secondary sections across several campuses in and around Kampala. The school offers day and boarding places, and supplements the national curriculum with ICT, swimming, and a structured co-curricular timetable.',
+      dayMin: 1400000,
+      dayMax: 2500000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dining Hall', 'Boarding Facilities', 'Playground', 'Clinic', 'School Bus', 'Security', 'Wi-Fi'],
+      rating: 4.4,
+      reviewCount: 1,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: true,
+    },
+    {
+      id: 'sch-7',
+      name: 'Nakasero Primary School',
+      types: ['primary'],
+      category: 'day',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: 'Nakasero, Kampala',
+      latitude: 0.3250,
+      longitude: 32.5800,
+      shortDescription: 'Central Kampala day primary school following the national curriculum.',
+      description:
+        'Nakasero Primary School is a day primary school in central Kampala running the Ugandan national curriculum from Primary One to Primary Seven, with a focus on core literacy and numeracy alongside sport and music.',
+      dayMin: 450000,
+      dayMax: 900000,
+      facilities: ['Library', 'Computer Lab', 'Sports Field', 'Playground', 'Security'],
+      rating: 4.2,
+      reviewCount: 0,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-8',
+      name: 'Seeta High School',
+      types: ['secondary_oa'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Mukono',
+      region: 'Central Region',
+      address: 'Seeta, Mukono District',
+      latitude: 0.3667,
+      longitude: 32.7333,
+      shortDescription: 'O and A level secondary school with day and boarding sections.',
+      description:
+        'Seeta High School offers O and A level under the Ugandan national curriculum across several campuses in Mukono District, with both day and boarding sections and a strong sciences stream at A level.',
+      dayMin: 900000,
+      dayMax: 1800000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Clinic', 'Security'],
+      rating: 4.3,
+      reviewCount: 0,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-9',
+      name: 'Makerere University',
+      types: ['university'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Kampala',
+      region: 'Central Region',
+      address: 'University Road, Makerere, Kampala',
+      latitude: 0.3316,
+      longitude: 32.5686,
+      shortDescription: "Uganda's oldest public university, offering undergraduate and postgraduate programmes.",
+      description:
+        'Makerere University is a public university in Kampala offering undergraduate and postgraduate programmes across colleges including humanities, science and technology, health sciences, business, agriculture, and education. The main campus houses libraries, laboratories, and halls of residence.',
+      dayMin: 1500000,
+      dayMax: 4000000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Clinic', 'Wi-Fi', 'Security'],
+      rating: 4.6,
+      reviewCount: 1,
+      isVerified: true,
+      isFeatured: true,
+      isPremium: false,
+    },
+    {
+      id: 'sch-10',
+      name: 'Uganda Christian University',
+      types: ['university'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Mukono',
+      region: 'Central Region',
+      address: 'Bishop Tucker Road, Mukono',
+      latitude: 0.3533,
+      longitude: 32.7550,
+      shortDescription: 'Private university in Mukono offering undergraduate and postgraduate degrees.',
+      description:
+        'Uganda Christian University is a private university based in Mukono, offering undergraduate and postgraduate programmes in law, business, social sciences, education, health sciences, and theology, with regional campuses elsewhere in the country.',
+      dayMin: 1800000,
+      dayMax: 3600000,
+      facilities: ['Library', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Chapel / Prayer Room', 'Clinic', 'Wi-Fi', 'Security'],
+      rating: 4.4,
+      reviewCount: 0,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-11',
+      name: 'Mbarara High School',
+      types: ['secondary_oa'],
+      category: 'boarding',
+      gender: 'mixed',
+      city: 'Mbarara',
+      region: 'Western Region',
+      address: 'Mbarara Town, Mbarara District',
+      latitude: -0.6072,
+      longitude: 30.6545,
+      shortDescription: 'Western Region boarding secondary school offering O and A level.',
+      description:
+        'Mbarara High School is a boarding secondary school in the Western Region offering O and A level under the Ugandan national curriculum, with science laboratories, a library, and extensive sports facilities.',
+      dayMin: 900000,
+      dayMax: 1600000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Clinic', 'Security'],
+      rating: 4.3,
+      reviewCount: 0,
+      isVerified: true,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-12',
+      name: 'Gulu High School',
+      types: ['secondary_o'],
+      category: 'mixed',
+      gender: 'mixed',
+      city: 'Gulu',
+      region: 'Northern Region',
+      address: 'Gulu Town, Gulu District',
+      latitude: 2.7746,
+      longitude: 32.2990,
+      shortDescription: 'Northern Region secondary school offering O level, day and boarding.',
+      description:
+        'Gulu High School is a secondary school in the Northern Region offering O level under the Ugandan national curriculum, with day and boarding sections, science laboratories, and a computer room.',
+      dayMin: 700000,
+      dayMax: 1300000,
+      facilities: ['Library', 'Science Laboratory', 'Computer Lab', 'Sports Field', 'Dining Hall', 'Boarding Facilities', 'Security'],
+      rating: 4.1,
+      reviewCount: 0,
+      isVerified: false,
+      isFeatured: false,
+      isPremium: false,
+    },
+    {
+      id: 'sch-13',
+      name: 'Little Steps Daycare & Nursery',
+      types: ['daycare', 'kindergarten'],
+      category: 'day',
+      gender: 'mixed',
+      city: 'Entebbe',
+      region: 'Central Region',
+      address: 'Kitoro, Entebbe',
+      latitude: 0.0512,
+      longitude: 32.4637,
+      shortDescription: 'Daycare and nursery for children from six months to five years.',
+      description:
+        'Little Steps takes children from six months through to nursery age, with a play-led programme, structured nap and meal times, and a low child-to-carer ratio. Parents receive a short daily report covering meals, sleep, and activities.',
+      dayMin: 300000,
+      dayMax: 600000,
+      facilities: ['Playground', 'Dining Hall', 'Clinic', 'Security', 'School Bus'],
+      rating: 4.5,
+      reviewCount: 0,
+      // Left pending so the admin moderation queue has something in it.
+      isVerified: false,
+      isFeatured: false,
+      isPremium: false,
+      status: 'pending',
+    },
+  ];;
+
+export const seedReviews: SeedReview[] = [
+      {
+        schoolId: 'sch-1',
+        userId: 'u1',
+        userName: 'Sarah Namukasa',
+        rating: 5,
+        title: 'Strong foundation for our two',
+        content: 'Both our children have been here three years. Reading and maths improved noticeably in the first year, and the class teachers actually know each child by name.',
+      },
+      {
+        schoolId: 'sch-1',
+        userId: 'u2',
+        userName: 'James Okello',
+        rating: 4,
+        title: 'Good teaching, fees add up',
+        content: 'The teaching is solid and our daughter is happy to go each morning. Fees are on the higher side once transport and lunch are included, so budget for the full amount.',
+      },
+      {
+        schoolId: 'sch-1',
+        userId: 'u3',
+        userName: 'Mary Achieng',
+        rating: 5,
+        title: 'Caring staff and reliable transport',
+        content: 'The staff are patient with the younger classes and the school bus has been dependable on the Ntinda route. Communication with parents is regular.',
+      },
+      {
+        schoolId: 'sch-2',
+        userId: 'u1',
+        userName: 'Sarah Namukasa',
+        rating: 5,
+        title: 'Broad co-curricular programme',
+        content: 'What stood out for us was how much goes on outside lessons — music, debate, and sport are all taken seriously, not treated as an afterthought.',
+      },
+      {
+        schoolId: 'sch-2',
+        userId: 'u4',
+        userName: 'Peter Kato',
+        rating: 4,
+        title: 'Well organised, large classes',
+        content: 'Admissions were straightforward and the school is well run. Classes are on the larger side, so ask about the teacher-to-pupil ratio for the year you are joining.',
+      },
+      {
+        schoolId: 'sch-3',
+        userId: 'u2',
+        userName: 'James Okello',
+        rating: 5,
+        title: 'Useful not having to switch schools',
+        content: 'Being able to go from nursery through to A level in one group has saved us two admission cycles. The sciences stream at A level has been the strongest part for our son.',
+      },
+      {
+        schoolId: 'sch-4',
+        userId: 'u3',
+        userName: 'Mary Achieng',
+        rating: 5,
+        title: 'Excellent boarding experience',
+        content: 'Our daughter settled quickly. The house system gives the girls real responsibility and the academic support in the sciences has been excellent.',
+      },
+      {
+        schoolId: 'sch-4',
+        userId: 'u1',
+        userName: 'Sarah Namukasa',
+        rating: 5,
+        title: 'Strong all round',
+        content: 'Academics are demanding but well supported, and there is plenty beyond the classroom. Visiting days are well organised.',
+      },
+      {
+        schoolId: 'sch-5',
+        userId: 'u4',
+        userName: 'Peter Kato',
+        rating: 5,
+        title: 'Good balance of academics and sport',
+        content: 'The campus is spacious and the sports programme is genuinely competitive. Our son has kept up academically while playing regularly.',
+      },
+      {
+        schoolId: 'sch-6',
+        userId: 'u2',
+        userName: 'James Okello',
+        rating: 4,
+        title: 'Good facilities, worth visiting first',
+        content: 'Facilities are very good, especially the pool and ICT rooms. Campuses differ quite a bit, so visit the specific one your child would attend.',
+      },
+      {
+        schoolId: 'sch-9',
+        userId: 'u3',
+        userName: 'Mary Achieng',
+        rating: 5,
+        title: 'Wide choice of programmes',
+        content: 'The range of programmes is the main draw, and the library is well stocked. Registration periods get busy, so start the paperwork early.',
+      },
+];

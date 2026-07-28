@@ -164,6 +164,58 @@ describe('requireAuth', () => {
     expect('claims' in result).toBe(true);
   });
 
+  it('allows a same-origin write behind a reverse proxy', async () => {
+    // Railway/Vercel rewrite request.url to an internal host. Comparing Origin
+    // against it rejected every real upload from the deployed site with a 403.
+    const token = await createAuthToken(user);
+    const result = await requireAuth(
+      new Request('http://localhost:3000/api/uploads', {
+        method: 'POST',
+        headers: {
+          origin: 'https://schools-production-a1d3.up.railway.app',
+          host: 'schools-production-a1d3.up.railway.app',
+          'x-forwarded-host': 'schools-production-a1d3.up.railway.app',
+          cookie: `sf_token=${token}`,
+        },
+      })
+    );
+
+    expect('claims' in result).toBe(true);
+  });
+
+  it('still blocks a forged origin behind a proxy', async () => {
+    const token = await createAuthToken(user);
+    const result = await requireAuth(
+      new Request('http://localhost:3000/api/uploads', {
+        method: 'POST',
+        headers: {
+          origin: 'https://evil.example.com',
+          'x-forwarded-host': 'schools-production-a1d3.up.railway.app',
+          cookie: `sf_token=${token}`,
+        },
+      })
+    );
+
+    expect('response' in result).toBe(true);
+    if ('response' in result) expect(result.response.status).toBe(403);
+  });
+
+  it('uses the first entry of a forwarded-host chain', async () => {
+    const token = await createAuthToken(user);
+    const result = await requireAuth(
+      new Request('http://localhost:3000/api/uploads', {
+        method: 'POST',
+        headers: {
+          origin: 'https://schoolfinder.co.ug',
+          'x-forwarded-host': 'schoolfinder.co.ug, internal.railway',
+          cookie: `sf_token=${token}`,
+        },
+      })
+    );
+
+    expect('claims' in result).toBe(true);
+  });
+
   it('allows cross-origin reads', async () => {
     const token = await createAuthToken(user);
     const result = await requireAuth(

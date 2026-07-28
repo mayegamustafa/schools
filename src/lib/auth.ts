@@ -127,8 +127,22 @@ function isCrossOriginWrite(request: Request): boolean {
   // Same-origin fetches from older browsers may omit Origin entirely.
   if (!origin) return false;
 
+  // The host must come from the forwarded headers, not request.url. Behind a
+  // reverse proxy (Railway, Vercel, any load balancer) request.url carries the
+  // *internal* host, so comparing against it rejected every genuine same-origin
+  // write from the deployed site.
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const host = forwardedHost || request.headers.get('host');
+
   try {
-    return new URL(origin).host !== new URL(request.url).host;
+    const originHost = new URL(origin).host;
+    if (host) {
+      // x-forwarded-host can be a comma-separated chain; the first entry is the
+      // host the browser actually addressed.
+      const expected = host.split(',')[0].trim();
+      return originHost !== expected;
+    }
+    return originHost !== new URL(request.url).host;
   } catch {
     return true;
   }

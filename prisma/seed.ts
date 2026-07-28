@@ -1,6 +1,7 @@
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hashSync } from 'bcryptjs';
+import { seedSchools, seedReviews } from './seed-data.js';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -15,7 +16,27 @@ const schoolImages = [
 ];
 const logo = 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=100&h=100&fit=crop';
 
+/** Mirrors slugify() in src/lib/serialize.ts so seeded URLs match real ones. */
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 async function main() {
+  // This seed deletes every row in every table before inserting. Running it
+  // against production would destroy real schools, accounts, and payments, so
+  // it refuses unless explicitly forced.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'yes') {
+    throw new Error(
+      'Refusing to seed with NODE_ENV=production — this deletes all existing data.\n'
+      + 'Set ALLOW_PRODUCTION_SEED=yes only if you genuinely intend to wipe the database.'
+    );
+  }
+
   console.log('Seeding database...');
 
   // Clear existing data
@@ -61,348 +82,68 @@ async function main() {
   });
 
   // Create schools
-  const schools = await Promise.all([
-    prisma.school.create({
-      data: {
-        id: 'sch-1',
-        name: 'Kampala Junior Academy',
-        slug: 'kampala-junior-academy',
-        ownerUserId: schoolAdminUser.id,
-        type: 'primary',
-        types: ['primary'],
-        category: 'day',
-        gender: 'mixed',
-        description: 'Kampala Junior Academy is a premier primary school committed to nurturing young minds through innovative teaching methods and a supportive learning environment. Our experienced educators focus on developing critical thinking, creativity, and social skills in every student. With state-of-the-art facilities and a comprehensive curriculum, we prepare students for success in their academic journey and beyond.',
-        shortDescription: 'A premier primary school committed to nurturing young minds through innovative teaching.',
-        logo,
-        coverImage: schoolImages[0],
-        gallery: JSON.stringify([schoolImages[0], schoolImages[1], schoolImages[2]]),
-        address: '12 Bombo Road',
-        city: 'Kampala',
-        region: 'Central Region',
-        country: 'Uganda',
-        latitude: 0.3476,
-        longitude: 32.5825,
-        phone: '+256 700 123 456',
-        email: 'info@kampalajunior.ac.ug',
-        website: 'https://kampalajunior.ac.ug',
-        whatsapp: '+256700123456',
-        currency: 'UGX',
-        dayMin: 800000,
-        dayMax: 1500000,
-        facilities: ['Transport', 'Library', 'Science Labs', 'Computer Lab', 'Sports Field', 'Cafeteria', 'Playground', 'WiFi', 'Security'],
-        rating: 4.7,
-        reviewCount: 3,
-        isVerified: true,
-        isFeatured: true,
-        isPremium: true,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-2',
-        name: 'Jinja Boarding School',
-        slug: 'jinja-boarding-school',
-        ownerUserId: schoolAdminUser.id,
-        // Multi-level listing — the common Ugandan case of one school covering
-        // both primary and secondary.
-        type: 'primary',
-        types: ['primary', 'secondary_oa'],
-        category: 'boarding',
-        gender: 'boys_only',
-        description: 'Jinja Boarding School offers a world-class boarding education that combines academic excellence with character development. Our serene campus located near the source of the Nile provides the perfect environment for focused learning. Students enjoy access to modern laboratories, extensive sports facilities, and a vibrant arts program.',
-        shortDescription: 'World-class boarding education combining academic excellence with character development.',
-        logo,
-        coverImage: schoolImages[1],
-        gallery: JSON.stringify([schoolImages[1], schoolImages[3], schoolImages[4]]),
-        address: '45 Main Street',
-        city: 'Jinja',
-        region: 'Eastern Region',
-        country: 'Uganda',
-        latitude: 0.4244,
-        longitude: 33.2041,
-        phone: '+256 711 234 567',
-        email: 'admissions@jinjaboarding.ac.ug',
-        website: 'https://jinjaboarding.ac.ug',
-        whatsapp: '+256711234567',
-        currency: 'UGX',
-        dayMin: 1200000,
-        dayMax: 1800000,
-        boardingMin: 2500000,
-        boardingMax: 3500000,
-        facilities: ['Transport', 'Library', 'Science Labs', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dormitory', 'Cafeteria', 'Medical Center', 'WiFi', 'Security', 'Chapel/Mosque'],
-        rating: 4.5,
-        reviewCount: 1,
-        isVerified: true,
-        isFeatured: false,
-        isPremium: true,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-3',
-        name: 'Little Stars Kindergarten',
-        slug: 'little-stars-kindergarten',
-        type: 'kindergarten',
-        types: ['kindergarten'],
-        category: 'day',
-        gender: 'mixed',
-        description: 'Little Stars Kindergarten provides a warm, nurturing environment where young children take their first steps in education. Our play-based curriculum is designed to develop cognitive, social, and motor skills through engaging activities. Every child is treated as unique, with personalized attention from our qualified early childhood educators.',
-        shortDescription: 'A warm, nurturing kindergarten with play-based learning for early childhood development.',
-        logo,
-        coverImage: schoolImages[2],
-        gallery: JSON.stringify([schoolImages[2], schoolImages[5], schoolImages[0]]),
-        address: '8 Entebbe Road',
-        city: 'Entebbe',
-        region: 'Central Region',
-        country: 'Uganda',
-        latitude: 0.0512,
-        longitude: 32.4637,
-        phone: '+256 722 345 678',
-        email: 'hello@littlestars.ac.ug',
-        whatsapp: '+256722345678',
-        currency: 'UGX',
-        dayMin: 400000,
-        dayMax: 750000,
-        facilities: ['Playground', 'Cafeteria', 'Security', 'Transport'],
-        rating: 4.8,
-        reviewCount: 0,
-        isVerified: true,
-        isFeatured: true,
-        isPremium: false,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-4',
-        name: 'Makerere University',
-        slug: 'makerere-university',
-        type: 'university',
-        types: ['university'],
-        category: 'mixed',
-        gender: 'mixed',
-        description: 'Makerere-affiliated learning hub offering undergraduate and postgraduate programs across multiple disciplines. Our research-driven approach, combined with industry partnerships, ensures graduates are well-prepared for the global job market. The campus features modern lecture halls, research centers, and extensive student amenities.',
-        shortDescription: 'A leading university with research-driven programs and strong industry partnerships.',
-        logo,
-        coverImage: schoolImages[3],
-        gallery: JSON.stringify([schoolImages[3], schoolImages[1], schoolImages[5]]),
-        address: 'University Road, Makerere Hill',
-        city: 'Kampala',
-        region: 'Central Region',
-        country: 'Uganda',
-        latitude: 0.3340,
-        longitude: 32.5677,
-        phone: '+256 733 456 789',
-        email: 'admissions@makerere.ac.ug',
-        website: 'https://makerere.ac.ug',
-        whatsapp: '+256733456789',
-        currency: 'UGX',
-        dayMin: 2000000,
-        dayMax: 5000000,
-        boardingMin: 3500000,
-        boardingMax: 7000000,
-        facilities: ['Library', 'Science Labs', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dormitory', 'Cafeteria', 'Medical Center', 'WiFi', 'Security', 'Art Studio'],
-        rating: 4.3,
-        reviewCount: 0,
-        isVerified: true,
-        isFeatured: false,
-        isPremium: true,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-5',
-        name: 'Sunshine Daycare Center',
-        slug: 'sunshine-daycare',
-        type: 'daycare',
-        types: ['daycare'],
-        category: 'day',
-        gender: 'mixed',
-        description: 'Sunshine Daycare Center provides safe, loving care for infants and toddlers while their parents work. Our trained caregivers follow a structured daily routine that includes age-appropriate activities, nutritious meals, and plenty of rest time. We believe every child deserves a bright start, and our center is designed to be a home away from home.',
-        shortDescription: 'Safe, loving daycare with structured activities and nutritious meals for your little ones.',
-        logo,
-        coverImage: schoolImages[4],
-        gallery: JSON.stringify([schoolImages[4], schoolImages[2], schoolImages[0]]),
-        address: '23 Acacia Avenue',
-        city: 'Kampala',
-        region: 'Central Region',
-        country: 'Uganda',
-        latitude: 0.3163,
-        longitude: 32.6014,
-        phone: '+256 744 567 890',
-        email: 'care@sunshinedaycare.ug',
-        whatsapp: '+256744567890',
-        currency: 'UGX',
-        dayMin: 300000,
-        dayMax: 600000,
-        facilities: ['Playground', 'Cafeteria', 'Security', 'Medical Center'],
-        rating: 4.6,
-        reviewCount: 0,
-        isVerified: false,
-        isFeatured: false,
-        isPremium: false,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-6',
-        name: 'Naalya International School',
-        slug: 'naalya-international',
-        type: 'secondary',
-        types: ['secondary'],
-        category: 'mixed',
-        gender: 'girls_only',
-        description: 'Naalya International School offers the Cambridge International Curriculum, providing students with globally recognized qualifications. Our diverse student body and international faculty create a multicultural learning experience. With a focus on holistic education, we develop well-rounded individuals prepared for university success worldwide.',
-        shortDescription: 'Cambridge curriculum school developing globally competitive, well-rounded individuals.',
-        logo,
-        coverImage: schoolImages[5],
-        gallery: JSON.stringify([schoolImages[5], schoolImages[3], schoolImages[1]]),
-        address: '15 Naalya Estate Road',
-        city: 'Wakiso',
-        region: 'Central Region',
-        country: 'Uganda',
-        latitude: 0.3700,
-        longitude: 32.6600,
-        phone: '+256 755 678 901',
-        email: 'info@naalyainternational.ac.ug',
-        website: 'https://naalyainternational.ac.ug',
-        whatsapp: '+256755678901',
-        currency: 'UGX',
-        dayMin: 3000000,
-        dayMax: 6000000,
-        boardingMin: 5000000,
-        boardingMax: 8000000,
-        facilities: ['Transport', 'Library', 'Science Labs', 'Computer Lab', 'Sports Field', 'Swimming Pool', 'Dormitory', 'Cafeteria', 'Art Studio', 'Music Room', 'Medical Center', 'WiFi', 'Security'],
-        rating: 4.9,
-        reviewCount: 1,
-        isVerified: true,
-        isFeatured: true,
-        isPremium: true,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-7',
-        name: 'Mbarara Primary Academy',
-        slug: 'mbarara-primary',
-        type: 'primary',
-        types: ['primary'],
-        category: 'day',
-        gender: 'mixed',
-        description: 'Mbarara Primary Academy is a modern, well-equipped school dedicated to providing quality primary education. Our teachers are passionate about fostering a love of learning in every child.',
-        shortDescription: 'Modern primary school dedicated to fostering a love of learning in every child.',
-        logo,
-        coverImage: schoolImages[0],
-        gallery: JSON.stringify([schoolImages[0], schoolImages[4]]),
-        address: '7 High Street',
-        city: 'Mbarara',
-        region: 'Western Region',
-        country: 'Uganda',
-        latitude: -0.6113,
-        longitude: 30.6586,
-        phone: '+256 766 789 012',
-        email: 'info@mbararaprimary.ac.ug',
-        whatsapp: '+256766789012',
-        currency: 'UGX',
-        dayMin: 500000,
-        dayMax: 900000,
-        facilities: ['Library', 'Computer Lab', 'Sports Field', 'Playground', 'Cafeteria', 'Security'],
-        rating: 4.2,
-        reviewCount: 0,
-        isVerified: true,
-        isFeatured: false,
-        isPremium: false,
-        status: 'active',
-      },
-    }),
-    prisma.school.create({
-      data: {
-        id: 'sch-8',
-        name: 'Gulu Progressive Academy',
-        slug: 'gulu-progressive-academy',
-        type: 'secondary',
-        types: ['secondary'],
-        category: 'day',
-        gender: 'mixed',
-        description: 'Gulu Progressive Academy offers an exceptional secondary education experience in Northern Uganda. Known for strong STEM programs and a vibrant extracurricular scene.',
-        shortDescription: 'Exceptional secondary education with strong STEM programs in Northern Uganda.',
-        logo,
-        coverImage: schoolImages[1],
-        gallery: JSON.stringify([schoolImages[1], schoolImages[5]]),
-        address: '32 Gulu-Kampala Highway',
-        city: 'Gulu',
-        region: 'Northern Region',
-        country: 'Uganda',
-        latitude: 2.7746,
-        longitude: 32.2990,
-        phone: '+256 777 890 123',
-        email: 'enroll@guluprogressive.ac.ug',
-        website: 'https://guluprogressive.ac.ug',
-        currency: 'UGX',
-        dayMin: 700000,
-        dayMax: 1200000,
-        facilities: ['Transport', 'Library', 'Science Labs', 'Computer Lab', 'Sports Field', 'Cafeteria', 'WiFi', 'Security'],
-        rating: 4.4,
-        reviewCount: 0,
-        isVerified: true,
-        isFeatured: false,
-        isPremium: true,
-        status: 'active',
-      },
-    }),
-  ]);
+  //
+  // These are real Ugandan schools, so the surrounding data is deliberately
+  // handled with care: contact details use the reserved +256 700 000 0XX range
+  // and .demo.ug addresses, so a demo enquiry can never reach an actual school's
+  // admissions office. Fees, ratings, and reviews are illustrative sample data.
+  const schoolSeed = seedSchools;
 
-  // Create reviews
-  await prisma.review.createMany({
-    data: [
-      {
-        schoolId: 'sch-1',
-        userId: 'u1',
-        userName: 'Sarah Namukasa',
-        rating: 5,
-        title: 'Excellent school for my children',
-        content: 'My two kids have been attending Kampala Junior Academy for 3 years now and the improvement in their academics and social skills is remarkable. The teachers are dedicated and the facilities are top-notch.',
-      },
-      {
-        schoolId: 'sch-1',
-        userId: 'u2',
-        userName: 'James Okello',
-        rating: 4,
-        title: 'Great environment, good teachers',
-        content: 'The learning environment is excellent and my daughter loves going to school every day. The fees are a bit on the higher side but worth it for the quality of education provided.',
-      },
-      {
-        schoolId: 'sch-1',
-        userId: 'u3',
-        userName: 'Mary Achieng',
-        rating: 5,
-        title: 'Highly recommended!',
-        content: 'The school has wonderful facilities and the staff is very caring. My son has grown so much since joining. The transport service is also very reliable.',
-      },
-      {
-        schoolId: 'sch-2',
-        userId: 'u1',
-        userName: 'Sarah Namukasa',
-        rating: 4,
-        title: 'Solid boarding school',
-        content: 'My eldest son boards here and I am impressed with the discipline and academic standards. The campus is beautiful and well-maintained.',
-      },
-      {
-        schoolId: 'sch-6',
-        userId: 'u4',
-        userName: 'Peter Kato',
-        rating: 5,
-        title: 'World-class education in Uganda',
-        content: 'Naalya International is truly world-class. The Cambridge curriculum prepares students exceptionally well. My daughter got accepted into a top UK university directly from here.',
-      },
-    ],
-  });
+  const schools = await Promise.all(
+    schoolSeed.map((school, index) =>
+      prisma.school.create({
+        data: {
+          id: school.id,
+          name: school.name,
+          slug: slugify(school.name),
+          ownerUserId: school.owned ? schoolAdminUser.id : null,
+          // `type` keeps the primary level; `types` holds everything offered.
+          type: school.types[0],
+          types: school.types,
+          category: school.category,
+          gender: school.gender,
+          description: school.description,
+          shortDescription: school.shortDescription,
+          logo,
+          coverImage: schoolImages[index % schoolImages.length],
+          gallery: JSON.stringify([
+            schoolImages[index % schoolImages.length],
+            schoolImages[(index + 1) % schoolImages.length],
+            schoolImages[(index + 2) % schoolImages.length],
+          ]),
+          address: school.address,
+          city: school.city,
+          region: school.region,
+          country: 'Uganda',
+          latitude: school.latitude,
+          longitude: school.longitude,
+          // Reserved demo range and .demo.ug addresses — a sample enquiry must
+          // never reach a real school's admissions office.
+          phone: `+256 700 000 ${String(index + 1).padStart(3, '0')}`,
+          email: `admissions@${slugify(school.name)}.demo.ug`,
+          website: null,
+          whatsapp: null,
+          currency: 'UGX',
+          dayMin: school.dayMin,
+          dayMax: school.dayMax,
+          facilities: school.facilities,
+          rating: school.rating,
+          reviewCount: school.reviewCount,
+          isVerified: school.isVerified,
+          emailVerified: school.isVerified,
+          isFeatured: school.isFeatured,
+          isPremium: school.isPremium,
+          status: school.status ?? 'active',
+        },
+      })
+    )
+  );
+
+  // Sample reviews.
+  //
+  // Counts here must match reviewCount on the matching school above, or the
+  // listing will advertise a rating with nothing behind it.
+  await prisma.review.createMany({ data: seedReviews });
 
   await prisma.subscriptionPlan.createMany({
     data: [
@@ -561,15 +302,15 @@ async function main() {
         name: 'David Okot',
         email: 'd.okot@example.com',
         phone: '+256781333444',
-        message: 'Please share boarding requirements and fee structure.',
+        message: 'Please share the boarding requirements and fee structure for P5.',
         status: 'contacted',
       },
       {
-        schoolId: 'sch-6',
+        schoolId: 'sch-4',
         name: 'Mariam Atuhaire',
         email: 'mariam@example.com',
         phone: '+256703555666',
-        message: 'Do you offer scholarships for international curriculum students?',
+        message: 'Do you offer bursaries for A level science students?',
         status: 'qualified',
       },
     ],

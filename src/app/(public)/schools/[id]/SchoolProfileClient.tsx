@@ -143,15 +143,25 @@ export default function SchoolProfileClient({ school, initialReviews }: Props) {
     }
   };
 
+  // Keys must match DEFAULT_FACILITIES in src/lib/taxonomy.ts — that is what the
+  // register form writes. They had drifted apart, so most facilities on a newly
+  // registered school rendered with no icon at all.
   const facilityIcons: Record<string, React.ReactNode> = {
-    Transport: <TruckIcon className="w-5 h-5" />, Library: <BookOpenIcon className="w-5 h-5" />,
-    'Science Labs': <BeakerIcon className="w-5 h-5" />, 'Computer Lab': <ComputerDesktopIcon className="w-5 h-5" />,
-    'Sports Field': <TrophyIcon className="w-5 h-5" />, 'Swimming Pool': <WaterIcon className="w-5 h-5" />,
-    Dormitory: <HomeIcon className="w-5 h-5" />, Cafeteria: <ForkKnifeIcon className="w-5 h-5" />,
-    'Art Studio': <PaletteIcon className="w-5 h-5" />, 'Music Room': <MusicalNoteIcon className="w-5 h-5" />,
-    Playground: <PuzzleIcon className="w-5 h-5" />, 'Medical Center': <HeartPulseIcon className="w-5 h-5" />,
-    WiFi: <WifiIcon className="w-5 h-5" />, Security: <ShieldCheckIcon className="w-5 h-5" />,
-    'Chapel/Mosque': <SunIcon className="w-5 h-5" />,
+    'Library': <BookOpenIcon className="w-5 h-5" />,
+    'Science Laboratory': <BeakerIcon className="w-5 h-5" />,
+    'Computer Lab': <ComputerDesktopIcon className="w-5 h-5" />,
+    'Sports Field': <TrophyIcon className="w-5 h-5" />,
+    'Swimming Pool': <WaterIcon className="w-5 h-5" />,
+    'School Bus': <TruckIcon className="w-5 h-5" />,
+    'Dining Hall': <ForkKnifeIcon className="w-5 h-5" />,
+    'Boarding Facilities': <HomeIcon className="w-5 h-5" />,
+    'Music Room': <MusicalNoteIcon className="w-5 h-5" />,
+    'Art Room': <PaletteIcon className="w-5 h-5" />,
+    'Playground': <PuzzleIcon className="w-5 h-5" />,
+    'Clinic': <HeartPulseIcon className="w-5 h-5" />,
+    'Wi-Fi': <WifiIcon className="w-5 h-5" />,
+    'Security': <ShieldCheckIcon className="w-5 h-5" />,
+    'Chapel / Prayer Room': <SunIcon className="w-5 h-5" />,
   };
 
   return (
