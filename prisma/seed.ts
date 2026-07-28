@@ -245,7 +245,7 @@ async function main() {
         autoRenew: true,
       },
       {
-        schoolId: 'sch-6',
+        schoolId: 'sch-3',
         planId: 'premium-monthly',
         status: 'active',
         periodStart: new Date('2026-04-01T00:00:00.000Z'),

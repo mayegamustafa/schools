@@ -446,7 +446,7 @@ export default function HomePage() {
                     {/* school cards */}
                     <div className="px-4 mt-2 space-y-2.5">
                       {[
-                        { name: 'Kampala Junior Academy', loc: 'Kampala · Central', rating: '4.8', grad: 'from-[#8b7355] to-[#69553e]' },
+                        { name: 'Bright Future Academy', loc: 'Kampala · Central', rating: '4.8', grad: 'from-[#8b7355] to-[#69553e]' },
                         { name: 'Greenhill Primary', loc: 'Wakiso · Central', rating: '4.6', grad: 'from-[#446c56] to-[#2d3640]' },
                       ].map(s => (
                         <div key={s.name} className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">

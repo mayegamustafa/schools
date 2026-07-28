@@ -372,7 +372,7 @@ export default function RegisterSchoolPage() {
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">School Name *</label>
               <input type="text" required value={form.name} onChange={e => update('name', e.target.value)}
-                placeholder="e.g. Kampala Junior Academy"
+                placeholder="Enter your school's full name"
                 className={inputClass('name')} />
               <FieldError field="name" />
             </div>

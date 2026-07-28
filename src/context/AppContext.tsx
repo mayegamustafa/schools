@@ -162,7 +162,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     let active = true;
     fetch('/api/users')
-      .then(res => (res.ok ? res.json() : null))
+      .then(res => {
+        // The cached user in localStorage outlives the 24h session cookie, so a
+        // returning visitor looked signed in while every request 401'd. Clearing
+        // it here returns the UI to a signed-out state instead.
+        if (res.status === 401) {
+          if (active) localStorage.removeItem('sf_user');
+          emitAuthChange();
+          return null;
+        }
+        return res.ok ? res.json() : null;
+      })
       .then(data => {
         if (active && Array.isArray(data?.user?.favorites)) setFavorites(data.user.favorites);
       })

@@ -4,14 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 /**
- * Interim password recovery.
+ * Password recovery.
  *
- * There is no transactional email provider configured yet, so this raises a
- * verified-reset request in the support queue rather than mailing a reset link.
- * An admin confirms the requester owns the account and sets a new password via
- * the users console. Replace this with a token + email flow once SMTP exists —
- * the "Forgot password?" link previously went nowhere at all, which left school
- * owners with no recovery path.
+ * With SMTP configured the server emails a single-use, one-hour reset link.
+ * Without it, the request becomes a high-priority support ticket an admin
+ * actions by hand — either way there is a recovery path, where the "Forgot
+ * password?" link previously went nowhere at all.
  */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -112,7 +110,7 @@ export default function ForgotPasswordPage() {
                   type="text"
                   value={schoolName}
                   onChange={e => setSchoolName(e.target.value)}
-                  placeholder="e.g. Kampala Junior Academy"
+                  placeholder="Your school's name"
                   className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                 />
                 <p className="text-xs text-text-muted mt-1.5">

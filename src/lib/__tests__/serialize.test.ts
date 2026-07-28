@@ -5,8 +5,8 @@ import type { School as DbSchool } from '@/generated/prisma/client';
 function makeRow(overrides: Partial<DbSchool> = {}): DbSchool {
   return {
     id: 'sch_1',
-    name: 'Kampala Junior Academy',
-    slug: 'kampala-junior-academy',
+    name: 'Bright Future Academy',
+    slug: 'bright-future-academy',
     ownerUserId: 'usr_1',
     type: 'primary',
     types: ['primary'],
@@ -93,11 +93,11 @@ describe('serializeSchool', () => {
 
 describe('slugify', () => {
   it('lowercases and hyphenates', () => {
-    expect(slugify('Kampala Junior Academy')).toBe('kampala-junior-academy');
+    expect(slugify('Bright Future Academy')).toBe('bright-future-academy');
   });
 
   it('strips punctuation', () => {
-    expect(slugify("St. Mary's College, Kisubi")).toBe('st-marys-college-kisubi');
+    expect(slugify("St. Anne's College, Riverside")).toBe('st-annes-college-riverside');
   });
 
   it('collapses repeated separators and trims edges', () => {
