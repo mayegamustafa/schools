@@ -350,6 +350,52 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         {/* Page content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
+          {/* A newly registered school is created as "pending" and stays out of
+              search until an admin approves it. Without saying so, the owner
+              sees a working dashboard and an listing that appears nowhere, with
+              nothing to explain the gap. */}
+          {activeSchool && activeSchool.status !== 'active' && (
+            <div className={`mb-5 rounded-xl border p-4 flex items-start gap-3 ${
+              activeSchool.status === 'rejected' || activeSchool.status === 'suspended'
+                ? 'border-error/30 bg-error/5'
+                : 'border-accent/30 bg-accent/5'
+            }`}>
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <circle cx="12" cy="12" r="9" />
+                <path strokeLinecap="round" d="M12 8v4.5M12 16h.01" />
+              </svg>
+              <div className="min-w-0">
+                {activeSchool.status === 'pending' && (
+                  <>
+                    <p className="text-sm font-semibold text-text-primary">Awaiting review</p>
+                    <p className="text-sm text-text-secondary mt-0.5">
+                      {activeSchool.name} is not yet visible in search or on the public site.
+                      Our team reviews new listings before they go live — you can keep editing
+                      your profile in the meantime.
+                    </p>
+                  </>
+                )}
+                {activeSchool.status === 'rejected' && (
+                  <>
+                    <p className="text-sm font-semibold text-text-primary">Listing not approved</p>
+                    <p className="text-sm text-text-secondary mt-0.5">
+                      {activeSchool.name} was not approved for listing. Contact support to find
+                      out what needs changing.
+                    </p>
+                  </>
+                )}
+                {activeSchool.status === 'suspended' && (
+                  <>
+                    <p className="text-sm font-semibold text-text-primary">Listing suspended</p>
+                    <p className="text-sm text-text-secondary mt-0.5">
+                      {activeSchool.name} has been removed from public search. Contact support
+                      to resolve this.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           {children}
         </main>
       </div>
