@@ -7,6 +7,8 @@ import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
 import LocationAutocomplete from '@/components/schools/LocationAutocomplete';
 import ImageUploadField from '@/components/schools/ImageUploadField';
+import PlaceInput from '@/components/schools/PlaceInput';
+import { regionForPlace, suggestPlaces, suggestRegions } from '@/lib/uganda-locations';
 import PasswordField, { PasswordChecklist, passwordProblem } from '@/components/ui/PasswordField';
 import {
   DEFAULT_CATEGORY_OPTIONS,
@@ -583,17 +585,39 @@ export default function RegisterSchoolPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">City *</label>
-                <input type="text" required value={form.city} onChange={e => update('city', e.target.value)}
-                  placeholder="e.g. Kampala" autoComplete="address-level2"
-                  className={inputClass('city')} />
+                <label htmlFor="school-city" className="block text-sm font-medium text-text-primary mb-2">
+                  City / District *
+                </label>
+                <PlaceInput
+                  id="school-city"
+                  required
+                  value={form.city}
+                  onChange={v => update('city', v)}
+                  // Picking a known district fills the region too — it is always
+                  // implied by the district, so asking twice invites mismatches.
+                  onPick={picked => {
+                    const region = regionForPlace(picked);
+                    if (region) update('region', region);
+                  }}
+                  suggest={q => suggestPlaces(q).map(p => p.name)}
+                  placeholder="Start typing, e.g. Kampala"
+                  className={inputClass('city')}
+                />
                 <FieldError field="city" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">Region *</label>
-                <input type="text" required value={form.region} onChange={e => update('region', e.target.value)}
-                  placeholder="e.g. Central Region" autoComplete="address-level1"
-                  className={inputClass('region')} />
+                <label htmlFor="school-region" className="block text-sm font-medium text-text-primary mb-2">
+                  Region *
+                </label>
+                <PlaceInput
+                  id="school-region"
+                  required
+                  value={form.region}
+                  onChange={v => update('region', v)}
+                  suggest={q => [...suggestRegions(q)]}
+                  placeholder="e.g. Central Region"
+                  className={inputClass('region')}
+                />
                 <FieldError field="region" />
               </div>
             </div>

@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { useApp } from '@/context/AppContext';
+import PlaceInput from '@/components/schools/PlaceInput';
+import { regionForPlace, suggestPlaces, suggestRegions } from '@/lib/uganda-locations';
 import { FALLBACK_COVER_IMAGE, FALLBACK_LOGO_IMAGE, sanitizeImageSrc } from '@/utils/helpers';
 
 interface DashboardResponse {
@@ -516,21 +518,33 @@ export default function DashboardProfilePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">City</label>
-            <input
-              type="text"
+            <label htmlFor="profile-city" className="block text-sm font-medium text-text-primary mb-2">
+              City / District
+            </label>
+            <PlaceInput
+              id="profile-city"
               value={form.city}
-              onChange={e => setForm(prev => ({ ...prev, city: e.target.value }))}
-              className="w-full px-4 py-3 border border-border rounded-xl text-sm"
+              onChange={v => setForm(prev => ({ ...prev, city: v }))}
+              onPick={picked => {
+                const region = regionForPlace(picked);
+                if (region) setForm(prev => ({ ...prev, region }));
+              }}
+              suggest={q => suggestPlaces(q).map(place => place.name)}
+              placeholder="Start typing, e.g. Kampala"
+              className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Region</label>
-            <input
-              type="text"
+            <label htmlFor="profile-region" className="block text-sm font-medium text-text-primary mb-2">
+              Region
+            </label>
+            <PlaceInput
+              id="profile-region"
               value={form.region}
-              onChange={e => setForm(prev => ({ ...prev, region: e.target.value }))}
-              className="w-full px-4 py-3 border border-border rounded-xl text-sm"
+              onChange={v => setForm(prev => ({ ...prev, region: v }))}
+              suggest={q => [...suggestRegions(q)]}
+              placeholder="e.g. Central Region"
+              className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
             />
           </div>
           <div>
