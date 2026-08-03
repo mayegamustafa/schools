@@ -97,9 +97,27 @@ and checks the schema still matches them.
 
 ## Admin access
 
-Admin accounts are created with a dedicated script rather than the seed —
-`prisma db seed` truncates every table first, so using it to recover access
-would destroy the data it was meant to rescue.
+Two routes, neither of which goes through the seed — `prisma db seed` truncates
+every table first, so using it to recover access would destroy the data it was
+meant to rescue.
+
+### From the browser: `/auth/setup`
+
+The page is gated on live state and reports one of three modes:
+
+| Mode | When | Who can use it |
+| --- | --- | --- |
+| `bootstrap` | No admin account exists | Anyone, until the first admin is made |
+| `recovery` | An admin exists **and** `ADMIN_SETUP_TOKEN` is set | Whoever holds the token |
+| `disabled` | An admin exists, no token set | Nobody — the page refuses |
+
+So on a running site the page is inert by default. To recover a lost password,
+set `ADMIN_SETUP_TOKEN` to 32+ random characters, redeploy, reset, then **remove
+the variable again**. A token shorter than 24 characters is ignored, because a
+guessable one is worse than none. Attempts are rate limited and written to the
+audit log whether they succeed or fail.
+
+### From the CLI
 
 ```bash
 # Against production (Railway injects the real DATABASE_URL)
@@ -107,8 +125,8 @@ ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='StrongPass1' \
   railway run npm run admin:create
 ```
 
-It creates the account, or promotes an existing user and resets their password.
-Only that one row is touched. Then sign in at `/auth/login`.
+Both paths create the account, or promote an existing user and reset their
+password. Only that one row is touched. Then sign in at `/auth/login`.
 
 ## Moderating listings
 
