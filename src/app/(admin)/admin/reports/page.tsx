@@ -55,8 +55,8 @@ export default function AdminReportsPage() {
   const logsEndpoint = `/api/admin/audit-logs?limit=20&q=${encodeURIComponent(query)}`;
   const ticketsEndpoint = `/api/admin/support?limit=20&status=${status}&priority=${priority}&q=${encodeURIComponent(query)}`;
 
-  const logs = useSWR(token ? [logsEndpoint, token] : null, fetcher, { refreshInterval: 30000 });
-  const tickets = useSWR(token ? [ticketsEndpoint, token] : null, fetcher, { refreshInterval: 15000 });
+  const logs = useSWR(token ? logsEndpoint : null, fetcher, { refreshInterval: 30000 });
+  const tickets = useSWR(token ? ticketsEndpoint : null, fetcher, { refreshInterval: 15000 });
 
   const updateTicket = async (ticketId: string, data: Partial<{ status: TicketStatus; priority: TicketPriority }>) => {
     if (!token) return;

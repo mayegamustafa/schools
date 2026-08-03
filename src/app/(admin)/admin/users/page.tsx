@@ -37,7 +37,7 @@ export default function AdminUsersPage() {
 
   const endpoint = `/api/users?q=${encodeURIComponent(query)}&role=${role}&limit=100`;
   const { data, error, isLoading, mutate } = useSWR(
-    token ? [endpoint, token] : null,
+    token ? endpoint : null,
     fetcher,
     { refreshInterval: 30000 }
   );

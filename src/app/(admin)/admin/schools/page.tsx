@@ -36,7 +36,7 @@ export default function AdminSchoolsPage() {
 
   const endpoint = `/api/admin/overview?q=${encodeURIComponent(query)}&status=${status}`;
   const { data, error, isLoading, mutate } = useSWR(
-    token ? [endpoint, token] : null,
+    token ? endpoint : null,
     fetcher,
     { refreshInterval: 30000 }
   );

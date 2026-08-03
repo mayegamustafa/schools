@@ -42,7 +42,7 @@ export default function DashboardLeadsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | LeadRecord['status']>('all');
 
   const endpoint = `/api/leads?status=${statusFilter}`;
-  const { data, error, isLoading, mutate } = useSWR(token ? [endpoint, token] : null, fetcher, {
+  const { data, error, isLoading, mutate } = useSWR(token ? endpoint : null, fetcher, {
     refreshInterval: 20000,
   });
 

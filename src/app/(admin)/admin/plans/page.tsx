@@ -53,7 +53,7 @@ export default function AdminPlansPage() {
 
   const endpoint = `/api/admin/plans?status=${status}`;
   const { data, error, isLoading, mutate } = useSWR(
-    token ? [endpoint, token] : null,
+    token ? endpoint : null,
     fetcher,
     { refreshInterval: 30000 }
   );
